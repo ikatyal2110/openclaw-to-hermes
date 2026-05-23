@@ -41,6 +41,7 @@ def _build_skill(ir: IRGraph, wf: Node) -> HermesSkill:
     inputs: dict[str, dict[str, Any]] = {}
     procedure: list[dict[str, Any]] = []
     prev_alias = "prev"
+    conditional_steps: list[str] = []
 
     for step in raw_steps:
         if not isinstance(step, dict):
@@ -54,7 +55,14 @@ def _build_skill(ir: IRGraph, wf: Node) -> HermesSkill:
         for input_name, env_var in step_inputs.items():
             inputs.setdefault(_input_key(env_var), {"type": "string", "env": env_var})
             rewritten[input_name] = "${" + _input_key(env_var) + "}"
-        procedure.append({"tool": plugin, "with": rewritten, "as": step_id})
+        proc_entry: dict[str, Any] = {"tool": plugin, "with": rewritten, "as": step_id}
+        if "when" in step:
+            # Mirror the source condition verbatim; user must verify expression syntax
+            # is valid on the Hermes side (placeholder of "_praxis_when" makes the
+            # auto-emission obvious to humans reviewing the file).
+            proc_entry["_praxis_when"] = step["when"]
+            conditional_steps.append(step_id)
+        procedure.append(proc_entry)
         prev_alias = step_id
 
     todos: list[str] = []
@@ -67,6 +75,11 @@ def _build_skill(ir: IRGraph, wf: Node) -> HermesSkill:
             todos.append(
                 f"Intent confidence is {confidence:.2f} (< 0.6). Review the description and `when_to_use`."
             )
+    if conditional_steps:
+        todos.append(
+            f"Conditional step(s) {', '.join(conditional_steps)} preserved as `_praxis_when` — "
+            "verify the expression syntax on the Hermes side and rename to `when:` once confirmed."
+        )
 
     # Reflect webhook triggers in when_to_use
     for t in triggers:

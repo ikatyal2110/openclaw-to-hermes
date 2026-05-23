@@ -4,6 +4,16 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-05-23
+
+### Added
+- **`praxis check <path>`** — pre-flight validator for CI. Runs the full pipeline through the resolver, groups diagnostics by level, and exits non-zero on errors. The `--warnings-as-errors` / `-W` flag escalates warnings too. Use as a merge gate.
+- **`when:` clause preservation in translation** — workflow steps with `when:` conditions now carry their expression into the generated Hermes skill as `_praxis_when` (a deliberately-prefixed placeholder so reviewers can see it was auto-generated). A TODO is added pointing to the step IDs that need verification.
+
+### Tests
+- 6 new tests covering `praxis check` (clean project passes, broken YAML fails with exit 1, warnings-only passes by default and fails with `-W`) and `when:` clause translation (survives into procedure, generates TODO, doesn't pollute unrelated steps).
+- Total: 131 tests passing.
+
 ## [0.4.0] — 2026-05-23
 
 ### Added
@@ -80,7 +90,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.1.0...v0.2.0

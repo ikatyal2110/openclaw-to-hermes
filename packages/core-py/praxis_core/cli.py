@@ -12,7 +12,7 @@ from rich.table import Table
 from praxis_core import IR_VERSION, __version__
 from praxis_core.extract import extract_prompt_clusters, extract_repeated_sequences
 from praxis_core.ir import IRGraph
-from praxis_core.ir.models import NodeKind
+from praxis_core.ir.models import Diagnostic, NodeKind
 from praxis_core.pipeline import build_ir, ir_to_json, migrate
 from praxis_core.reports import render_extract_report, render_mermaid_graph, render_migration_report
 
@@ -282,6 +282,55 @@ def skills_extract(
             encoding="utf-8",
         )
         console.print(f"[dim]Report written to {report}[/dim]")
+
+
+@app.command()
+def check(
+    path: Path = typer.Argument(
+        ..., exists=True, file_okay=False, dir_okay=True, help="Source project root."
+    ),
+    warnings_as_errors: bool = typer.Option(
+        False, "--warnings-as-errors", "-W", help="Treat warning-level diagnostics as failures."
+    ),
+) -> None:
+    """Pre-flight validation. Exit 0 if clean, 1 if errors (or warnings with -W).
+
+    Use this as a CI gate before `praxis migrate`. Surfaces:
+      • PRX001/PRX002 — analyzer/YAML parse failures
+      • PRX011 — workflow step missing a plugin reference
+      • PRX030 — dangling edges (references to nodes that don't exist)
+      • …and anything else the analyzers/resolver emit.
+    """
+    ir = build_ir(path)
+    errors = [d for d in ir.diagnostics if d.level == "error"]
+    warns = [d for d in ir.diagnostics if d.level == "warn"]
+    others = [d for d in ir.diagnostics if d.level not in ("error", "warn")]
+
+    def _print_group(name: str, color: str, items: list[Diagnostic], sym: str) -> None:
+        if not items:
+            return
+        console.print(f"[{color}]{sym} {len(items)} {name}:[/{color}]")
+        for d in items:
+            console.print(f"  [bold]{d.code or '?'}[/bold] {d.message}")
+            if d.hint:
+                console.print(f"    [dim]hint:[/dim] {d.hint}")
+            if d.node_id:
+                console.print(f"    [dim]node:[/dim] {d.node_id}")
+
+    _print_group("error(s)", "red", errors, "✗")
+    _print_group("warning(s)", "yellow", warns, "!")
+    _print_group("note(s)", "cyan", others, "•")
+
+    failed = bool(errors) or (warnings_as_errors and bool(warns))
+    if failed:
+        console.print(f"[red]check failed[/red] — {len(errors)} error(s), {len(warns)} warning(s).")
+        raise typer.Exit(1)
+    if warns:
+        console.print(
+            f"[yellow]check passed with {len(warns)} warning(s).[/yellow] Use -W to make warnings fail."
+        )
+    else:
+        console.print("[green]check passed.[/green] No diagnostics.")
 
 
 @app.command()

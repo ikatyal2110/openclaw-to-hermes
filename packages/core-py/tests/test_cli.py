@@ -38,6 +38,38 @@ def test_cli_doctor_passes() -> None:
     assert "IR JSON schema" in result.output
 
 
+def test_cli_check_passes_clean_project(sample_root: Path) -> None:
+    result = runner.invoke(app, ["check", str(sample_root)])
+    assert result.exit_code == 0
+    assert "check passed" in result.output
+
+
+def test_cli_check_fails_on_broken_yaml(tmp_path: Path) -> None:
+    project = tmp_path / "broken"
+    (project / "workflows").mkdir(parents=True)
+    (project / "workflows" / "oops.yaml").write_text("this: is: invalid: yaml:\n")
+    result = runner.invoke(app, ["check", str(project)])
+    assert result.exit_code == 1
+    assert "PRX001" in result.output
+    assert "check failed" in result.output
+
+
+def test_cli_check_warnings_as_errors(tmp_path: Path) -> None:
+    """A project with only warnings passes by default but fails with -W."""
+    project = tmp_path / "warn-only"
+    project.mkdir()
+    # Reference a workflow step with no plugin → PRX011 warning
+    (project / "workflows").mkdir()
+    (project / "workflows" / "no_plugin.yaml").write_text(
+        "name: x\ndescription: x\nsteps:\n  - id: orphan\n"
+    )
+    result_default = runner.invoke(app, ["check", str(project)])
+    assert result_default.exit_code == 0
+    assert "warning(s)" in result_default.output
+    result_strict = runner.invoke(app, ["check", str(project), "-W"])
+    assert result_strict.exit_code == 1
+
+
 def test_cli_init_creates_scannable_project(tmp_path: Path) -> None:
     target = tmp_path / "init-test"
     result = runner.invoke(app, ["init", str(target)])

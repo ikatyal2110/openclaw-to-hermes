@@ -164,6 +164,7 @@ praxis graph <path> --format mermaid    Architecture graph (mermaid | json)
 praxis report <path>                    Migration feasibility report (Markdown)
 praxis explain <path> <node>            Drill into one node — tier, intent, edges
 praxis init <path>                      Scaffold a starter OpenClaw project
+praxis check <path> [-W]                Pre-flight validator (exit 1 on errors)
 praxis migrate <path> --target hermes --out <dir>
                                         Translate + emit Hermes project + report + graph + IR
 praxis ir validate <file>               Lint an IR file against the JSON Schema
@@ -179,11 +180,12 @@ For a step-by-step first-day walkthrough on a real project, see [`docs/migrating
 - **v0.1.** scan / graph / report / migrate / ir validate / ir diff, OpenClaw → Hermes, rule-based.
 - **v0.2.** Prompt clustering & tool-sequence repetition detection (`praxis skills extract`). Golden-file fixture lock. `doctor` and `--version`. Strict mypy in CI.
 - **v0.3.** `praxis explain <node>` for drilling into classifications. Robust analyzer error handling (broken YAML → diagnostic, not crash). Secrets classifier on env vars (🔐 in the report). Real-project walkthrough doc.
-- **v0.4 (current).** Migration checklist in the report (actionable playbook, not just a diagnostic). `praxis init` scaffolder. `--json` output for scan + explain.
-- **v0.5.** LLM-assisted intent inference with content-addressed caching. Memory schema beyond KV/vector. Round-trip tests (Hermes → IR → Hermes).
-- **v0.6.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
-- **v0.7.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
-- **v0.8.** VS Code extension surfacing the migration report as inline annotations.
+- **v0.4.** Migration checklist in the report (actionable playbook, not just a diagnostic). `praxis init` scaffolder. `--json` output for scan + explain.
+- **v0.5 (current).** `praxis check` (CI-friendly pre-flight validator). `when:` clause preservation through translation (auto-emitted as `_praxis_when` with a TODO for verification).
+- **v0.6.** LLM-assisted intent inference with content-addressed caching. Memory schema beyond KV/vector. Round-trip tests (Hermes → IR → Hermes).
+- **v0.7.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
+- **v0.8.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
+- **v0.9.** VS Code extension surfacing the migration report as inline annotations.
 - **v1.0.** Stable IR. Backend authoring guide. Public benchmark fixture suite. PyPI release.
 
 ## Contributing
