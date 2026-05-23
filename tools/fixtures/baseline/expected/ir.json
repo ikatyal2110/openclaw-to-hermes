@@ -160,7 +160,10 @@
       "id": "env.JIRA_BASE_URL.effd37f7",
       "inputs": [],
       "kind": "env",
-      "metadata": {},
+      "metadata": {
+        "classification": "config",
+        "secret": false
+      },
       "name": "JIRA_BASE_URL",
       "outputs": [],
       "portability": {
@@ -181,7 +184,10 @@
       "id": "env.JIRA_TOKEN.6f2276f7",
       "inputs": [],
       "kind": "env",
-      "metadata": {},
+      "metadata": {
+        "classification": "secret",
+        "secret": true
+      },
       "name": "JIRA_TOKEN",
       "outputs": [],
       "portability": {
@@ -202,7 +208,10 @@
       "id": "env.OPENAI_API_KEY.3568a92b",
       "inputs": [],
       "kind": "env",
-      "metadata": {},
+      "metadata": {
+        "classification": "secret",
+        "secret": true
+      },
       "name": "OPENAI_API_KEY",
       "outputs": [],
       "portability": {
@@ -223,7 +232,10 @@
       "id": "env.RSS_URL.839522ab",
       "inputs": [],
       "kind": "env",
-      "metadata": {},
+      "metadata": {
+        "classification": "config",
+        "secret": false
+      },
       "name": "RSS_URL",
       "outputs": [],
       "portability": {
@@ -244,7 +256,10 @@
       "id": "env.SLACK_CHANNEL.0d9ee935",
       "inputs": [],
       "kind": "env",
-      "metadata": {},
+      "metadata": {
+        "classification": "config",
+        "secret": false
+      },
       "name": "SLACK_CHANNEL",
       "outputs": [],
       "portability": {

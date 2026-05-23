@@ -38,6 +38,32 @@ def test_cli_doctor_passes() -> None:
     assert "IR JSON schema" in result.output
 
 
+def test_cli_explain_by_name(sample_root: Path) -> None:
+    result = runner.invoke(app, ["explain", str(sample_root), "dedupe_seen"])
+    assert result.exit_code == 0
+    assert "tool.dedupe_seen" in result.output
+    assert "portability:" in result.output
+    assert "needs_review" in result.output
+    assert "edges:" in result.output
+
+
+def test_cli_explain_unknown_node_returns_nonzero(sample_root: Path) -> None:
+    result = runner.invoke(app, ["explain", str(sample_root), "nonexistent_thing"])
+    assert result.exit_code == 1
+    assert "No node matches" in result.output
+
+
+def test_cli_explain_by_full_id(sample_root: Path) -> None:
+    # First scan to discover an ID, then explain by it.
+    scan_result = runner.invoke(app, ["scan", str(sample_root), "--emit-ir", "/tmp/_pxe.json"])
+    assert scan_result.exit_code == 0
+    payload = json.loads(Path("/tmp/_pxe.json").read_text())
+    tool_node = next(n for n in payload["nodes"] if n["kind"] == "tool")
+    result = runner.invoke(app, ["explain", str(sample_root), tool_node["id"]])
+    assert result.exit_code == 0
+    assert tool_node["id"] in result.output
+
+
 def test_cli_scan_prints_summary(sample_root: Path) -> None:
     result = runner.invoke(app, ["scan", str(sample_root)])
     assert result.exit_code == 0

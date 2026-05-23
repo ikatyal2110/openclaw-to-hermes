@@ -241,6 +241,100 @@ def skills_extract(
 
 
 @app.command()
+def explain(
+    path: Path = typer.Argument(
+        ..., exists=True, file_okay=False, dir_okay=True, help="Source project root."
+    ),
+    node: str = typer.Argument(..., help="Node ID or name to explain."),
+) -> None:
+    """Drill into one node — kind, intent, capabilities, side effects, portability, edges.
+
+    The debugging tool when a classification surprises you. NODE may be the full
+    ID (e.g. tool.fetch_articles.d03c4684) or just the name (`fetch_articles`).
+    """
+    ir = build_ir(path)
+    match = ir.node_by_id(node)
+    if match is None:
+        matches = [n for n in ir.nodes if n.name == node]
+        if len(matches) == 1:
+            match = matches[0]
+        elif len(matches) > 1:
+            console.print(
+                f"[yellow]Name '{node}' is ambiguous; matches {len(matches)} nodes:[/yellow]"
+            )
+            for n in matches:
+                console.print(f"  {n.id}")
+            console.print("[dim]Re-run with the full ID.[/dim]")
+            raise typer.Exit(2)
+
+    if match is None:
+        suggestions = [n.id for n in ir.nodes if node.lower() in n.id.lower()][:5]
+        console.print(f"[red]No node matches '{node}'.[/red]")
+        if suggestions:
+            console.print("Did you mean:")
+            for s in suggestions:
+                console.print(f"  {s}")
+        raise typer.Exit(1)
+
+    n = match
+    kind = n.kind if isinstance(n.kind, str) else n.kind.value
+    console.print(f"[bold]{n.id}[/bold]")
+    console.print(f"  kind:        {kind}")
+    console.print(f"  name:        {n.name}")
+    if n.description:
+        console.print(f"  description: {n.description}")
+    if n.intent:
+        console.print(
+            f"  intent:      {n.intent.description}  [dim](confidence={n.intent.confidence:.2f}, source={n.intent.source})[/dim]"
+        )
+        for ev in n.intent.evidence:
+            console.print(f"    [dim]· {ev}[/dim]")
+    if n.capabilities:
+        caps = ", ".join(c if isinstance(c, str) else c.value for c in n.capabilities)
+        console.print(f"  capabilities: {caps}")
+    if n.side_effects:
+        console.print("  side effects:")
+        for se in n.side_effects:
+            se_kind = se.kind if isinstance(se.kind, str) else se.kind.value
+            console.print(f"    · {se_kind}" + (f" → {se.target}" if se.target else ""))
+    if n.inputs:
+        console.print(f"  inputs:      {', '.join(p.name for p in n.inputs)}")
+    if n.outputs:
+        console.print(f"  outputs:     {', '.join(p.name for p in n.outputs)}")
+    if n.portability:
+        tier = (
+            n.portability.tier if isinstance(n.portability.tier, str) else n.portability.tier.value
+        )
+        color = {"portable": "green", "partial": "yellow", "needs_review": "orange1"}.get(
+            tier, "red"
+        )
+        console.print(
+            f"  portability: [{color}]{tier}[/{color}]  [dim](score={n.portability.score:.2f})[/dim]"
+        )
+        if n.portability.rationale:
+            console.print(f"    rationale: {n.portability.rationale}")
+        for blocker in n.portability.blockers:
+            console.print(f"    [red]✗[/red] {blocker}")
+
+    in_edges = [e for e in ir.edges if e.to == n.id]
+    out_edges = [e for e in ir.edges if e.from_ == n.id]
+    if in_edges or out_edges:
+        console.print("  edges:")
+        for e in in_edges:
+            ek = e.kind if isinstance(e.kind, str) else e.kind.value
+            console.print(
+                f"    ← [dim]{ek}[/dim] from {e.from_}" + (f" ({e.label})" if e.label else "")
+            )
+        for e in out_edges:
+            ek = e.kind if isinstance(e.kind, str) else e.kind.value
+            console.print(f"    → [dim]{ek}[/dim] to {e.to}" + (f" ({e.label})" if e.label else ""))
+
+    if n.provenance:
+        src = n.provenance.source_file or "—"
+        console.print(f"  source:      {n.provenance.framework} ← {src}")
+
+
+@app.command()
 def doctor() -> None:
     """Sanity-check the local install. Useful as a first command after install."""
     import importlib
@@ -334,7 +428,20 @@ def _print_summary(ir: IRGraph) -> None:
         table.add_row(kind, n.name, tier, f"{n.portability.score:.2f}")
     console.print(table)
     if ir.diagnostics:
-        console.print(f"[yellow]{len(ir.diagnostics)} diagnostic(s).[/yellow]")
+        errors = [d for d in ir.diagnostics if d.level == "error"]
+        warns = [d for d in ir.diagnostics if d.level != "error"]
+        if errors:
+            console.print(f"[red]{len(errors)} error(s):[/red]")
+            for d in errors[:5]:
+                console.print(f"  [red]✗[/red] [bold]{d.code or '?'}[/bold] {d.message}")
+                if d.hint:
+                    console.print(f"     [dim]hint:[/dim] {d.hint}")
+            if len(errors) > 5:
+                console.print(f"  [dim]…and {len(errors) - 5} more.[/dim]")
+        if warns:
+            console.print(
+                f"[yellow]{len(warns)} warning(s).[/yellow] Run `praxis report` for details."
+            )
 
 
 def _find_schema(quiet: bool = False) -> Path:

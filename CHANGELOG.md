@@ -4,6 +4,23 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-05-23
+
+### Added
+- **`praxis explain <path> <node>`** — drill into a single IR node: kind, intent (with confidence + evidence), capabilities, side effects, portability tier with rationale + blockers, full edge inventory in/out, provenance. The debugging tool you reach for when a classification surprises you. Accepts either a node name or a full ID, with disambiguation prompts when a name is ambiguous and "did you mean" suggestions on misses.
+- **Secrets classifier on env vars** — every env node is now stamped with `metadata["secret"]` and `metadata["classification"]` based on common naming conventions (TOKEN/KEY/SECRET/PASSWORD/etc. matched as whole underscore-segments). The migration report splits the environment section into 🔐 *Secrets* and *Configuration*, with explicit guidance to route secrets through Vault/AWS Secrets Manager rather than plaintext env.
+- **`docs/migrating-real-projects.md`** — step-by-step walkthrough for the first day with Praxis on a real OpenClaw repo: install → scan → visualize → report → explain → extract → migrate → iterate.
+- **`is_likely_secret(name)`** as a public helper in `praxis_core.analyzers.openclaw.env` so reports and downstream tooling can use the same classification.
+
+### Changed
+- **Analyzer error handling**: malformed YAML or unexpected exceptions inside an analyzer now produce structured `Diagnostic` entries (`PRX001` for YAML errors with file:line context, `PRX002` for everything else) instead of a Python traceback. The driver continues running the remaining analyzers so a single broken file doesn't blank out the whole scan.
+- **`praxis scan` output** now prints up to 5 errors with hints, and a warning count, instead of a single opaque "N diagnostic(s)" line.
+- **`_find_schema(quiet=True)`** added so `praxis doctor` can probe schema discoverability without aborting on failure.
+
+### Tests
+- 22 new tests: env classifier, broken-YAML diagnostic emission, `praxis explain` (by name, by full ID, on unknown), and end-to-end report rendering of the secrets split.
+- Total: 120 tests passing.
+
 ## [0.2.0] — 2026-05-23
 
 ### Added
@@ -51,6 +68,7 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ikatyal2110/openclaw-to-hermes/releases/tag/v0.1.0

@@ -100,3 +100,24 @@ def test_intent_from_description_has_high_confidence(sample_root: Path) -> None:
     )
     assert daily.intent is not None
     assert daily.intent.confidence >= 0.9
+
+
+def test_analyzer_emits_diagnostic_on_broken_yaml(tmp_path: Path) -> None:
+    """Malformed YAML should surface as a PRX001 diagnostic, not crash."""
+    project = tmp_path / "broken"
+    (project / "workflows").mkdir(parents=True)
+    (project / "workflows" / "oops.yaml").write_text("this: is: invalid: yaml:\n")
+    ir = analyze_openclaw_project(project)
+    errors = [d for d in ir.diagnostics if d.level == "error"]
+    assert errors, "Broken YAML must produce at least one error diagnostic."
+    assert any(d.code == "PRX001" for d in errors)
+    assert any("oops.yaml" in d.message for d in errors)
+
+
+def test_analyzer_emits_diagnostic_on_nonexistent_optional_dir(tmp_path: Path) -> None:
+    """Missing optional dirs (prompts/, memory/) must NOT produce diagnostics — they're optional."""
+    project = tmp_path / "minimal"
+    project.mkdir()
+    ir = analyze_openclaw_project(project)
+    errors = [d for d in ir.diagnostics if d.level == "error"]
+    assert errors == []

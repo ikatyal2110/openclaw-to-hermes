@@ -92,13 +92,31 @@ def _todos(ir: IRGraph) -> list[str]:
 
 
 def _env_section(ir: IRGraph) -> list[str]:
-    envs = [n.name for n in ir.nodes if _kind(n) == NodeKind.ENV.value]
-    if not envs:
+    env_nodes = [n for n in ir.nodes if _kind(n) == NodeKind.ENV.value]
+    if not env_nodes:
         return []
-    out = ["## Required environment", "", "Set these on the Hermes side:", ""]
-    for v in sorted(envs):
-        out.append(f"- `{v}`")
-    out.append("")
+    secrets = sorted(n.name for n in env_nodes if (n.metadata or {}).get("secret"))
+    configs = sorted(n.name for n in env_nodes if not (n.metadata or {}).get("secret"))
+    out = ["## Required environment", ""]
+
+    if secrets:
+        out += [
+            "### Secrets (credential-like names — handle securely on the Hermes side)",
+            "",
+            "These variables look like credentials based on their names. **Do not commit values to source control.**",
+            "Wire them through your Hermes secret manager (Vault, AWS Secrets Manager, Doppler, etc.) — not as plaintext env.",
+            "",
+        ]
+        for v in secrets:
+            out.append(f"- 🔐 `{v}`")
+        out.append("")
+
+    if configs:
+        out += ["### Configuration", "", "Non-secret config; plain env vars are fine:", ""]
+        for v in configs:
+            out.append(f"- `{v}`")
+        out.append("")
+
     return out
 
 

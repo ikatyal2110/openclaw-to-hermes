@@ -1,4 +1,6 @@
-"""Extracts declared environment variables from openclaw.yaml and .env.example."""
+"""Extracts declared environment variables from openclaw.yaml and .env.example,
+classifying each as 'secret' (needs secure handling on the Hermes side) or 'config'
+based on common naming conventions."""
 
 from __future__ import annotations
 
@@ -7,6 +9,35 @@ from pathlib import Path
 from praxis_core.analyzers.base import Analyzer
 from praxis_core.ir import IRGraph
 from praxis_core.ir.models import Node, NodeKind, Provenance, make_node_id
+
+# Tokens that, when they appear as a whole `_`-delimited segment of an env var
+# name, indicate a credential. Matched case-insensitively.
+_SECRET_TOKENS = frozenset(
+    {
+        "TOKEN",
+        "KEY",
+        "SECRET",
+        "PASSWORD",
+        "PASSWD",
+        "CREDENTIAL",
+        "CREDENTIALS",
+        "PRIVATE",
+        "AUTH",
+        "BEARER",
+        "SESSION",
+        "COOKIE",
+    }
+)
+
+
+def is_likely_secret(name: str) -> bool:
+    """True if the env var name suggests it holds a credential.
+
+    Matches whole underscore-delimited segments only, so `API_URL` does not match
+    just because it contains `KEY`-adjacent text, but `OPENAI_API_KEY` does.
+    Public so reports and tests can call the same heuristic.
+    """
+    return any(segment in _SECRET_TOKENS for segment in name.upper().split("_"))
 
 
 class EnvAnalyzer(Analyzer):
@@ -33,6 +64,7 @@ class EnvAnalyzer(Analyzer):
                     seen.add(key)
 
         for var in sorted(seen):
+            secret = is_likely_secret(var)
             ir.nodes.append(
                 Node(
                     id=make_node_id("openclaw", NodeKind.ENV, var),
@@ -43,6 +75,10 @@ class EnvAnalyzer(Analyzer):
                         source_file=".env.example",
                         original_kind="env",
                     ),
+                    metadata={
+                        "secret": secret,
+                        "classification": "secret" if secret else "config",
+                    },
                 )
             )
 
