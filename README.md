@@ -1,8 +1,8 @@
 # Praxis
 
-> Migration engine and semantic translator for moving agent systems from **OpenClaw** (orchestration-heavy) to **Hermes** (cognition-heavy).
+> **Migrate an agent system from OpenClaw to Hermes** — workflows, plugins, prompts, memory, schedules, secrets, and the structural decisions behind them. Not a config converter; an architecture-aware translator.
 
-Praxis is **not** a config converter. It is an architecture analyzer that extracts the *operational intent* behind your OpenClaw workflows, plugins, prompts, and memory stores, and reconstructs that intent as Hermes-native skills, schedules, tools, and memory schemas — flagging anything that can't be translated mechanically for human review.
+Praxis reads your OpenClaw project, builds a typed intermediate representation, and emits a Hermes project plus a Markdown **migration playbook** — a checklist of what was auto-translated and what needs your judgment. The playbook is the product.
 
 ```
 ┌─────────────────┐    Praxis IR    ┌─────────────────┐
@@ -23,7 +23,7 @@ Praxis is **not** a config converter. It is an architecture analyzer that extrac
 
 ## Status
 
-**v0.2 — beta.** Analyzer, rule-based migration, and prompt-clustering skill extraction for OpenClaw → Hermes. IR schema is `0.1` and locked behind a golden-file regression suite. Hybrid runtime, LLM-assisted intent inference, and additional backends are deferred — see [Roadmap](#roadmap) and [`CHANGELOG.md`](CHANGELOG.md).
+**v0.5 — beta.** Production-quality CLI with `scan` / `graph` / `report` / `migrate` / `check` / `explain` / `skills extract` / `stats` / `doctor` / `init`. IR schema `0.1`, locked by a golden-file regression suite. 130+ tests, strict mypy in CI. Hybrid runtime and additional backends are deferred — see [Roadmap](#roadmap) and [`CHANGELOG.md`](CHANGELOG.md).
 
 ## What Praxis is and isn't
 
@@ -71,14 +71,26 @@ praxis scan examples/openclaw-sample --emit-ir ir.json
 praxis ir validate ir.json
 ```
 
-### Sample output — `praxis migrate`
+### What you get from `praxis migrate`
+
+```
+out/
+├── MIGRATION_REPORT.md     ← your playbook (checklist + tier table + TODOs)
+├── architecture.mmd        ← Mermaid graph (paste into mermaid.live)
+├── ir.json                 ← portable IR (diff between runs, validate)
+└── hermes/
+    ├── skills/             ← one YAML per workflow
+    ├── tools/              ← one YAML per plugin
+    ├── schedules/          ← one YAML per cron trigger
+    ├── memory/             ← one YAML per store
+    └── prompts/            ← prompts copied verbatim
+```
+
+The CLI prints a one-line summary so you know what was emitted:
 
 ```
 Migrated → ./out
-  report: ./out/MIGRATION_REPORT.md
-  graph : ./out/architecture.mmd
-  ir    : ./out/ir.json
-  files : {'skills': 2, 'tools': 6, 'schedules': 1, 'memory': 2, 'prompts': 6}
+  files : {'skills': 3, 'tools': 6, 'schedules': 2, 'memory': 2, 'prompts': 6}
 ```
 
 ### Sample output — `praxis skills extract`
@@ -157,20 +169,28 @@ This is by design. A migration tool that pretends to handle every dialect of eve
 ## CLI reference
 
 ```
-praxis --version                        Print version and IR schema version
-praxis doctor                           Run install sanity checks
-praxis scan <path>                      Walk repo, emit IR + summary table
-praxis graph <path> --format mermaid    Architecture graph (mermaid | json)
-praxis report <path>                    Migration feasibility report (Markdown)
-praxis explain <path> <node>            Drill into one node — tier, intent, edges
-praxis init <path>                      Scaffold a starter OpenClaw project
-praxis check <path> [-W]                Pre-flight validator (exit 1 on errors)
-praxis migrate <path> --target hermes --out <dir>
-                                        Translate + emit Hermes project + report + graph + IR
-praxis ir validate <file>               Lint an IR file against the JSON Schema
-praxis ir diff <a> <b>                  Structural diff between two IRs
+# Discovery
+praxis --version                              Print version + IR schema version
+praxis doctor                                 Sanity-check the local install
+praxis init <path>                            Scaffold a starter OpenClaw project
+praxis stats <path> [--json]                  At-a-glance project analytics
+
+# Read-only analysis
+praxis scan <path> [--emit-ir FILE] [--json]  Walk repo, summary table or JSON
+praxis graph <path> --format mermaid          Architecture graph
+praxis report <path>                          Migration playbook (Markdown)
+praxis explain <path> <node> [--json]         Drill into one node
 praxis skills extract <path> [--threshold N] [--report FILE]
-                                        Cluster prompts + find repeated tool sequences
+                                              Prompt clusters + tool-sequence repeats
+praxis check <path> [-W]                      CI-friendly validator (exit 1 on errors)
+
+# Translation
+praxis migrate <path> --target hermes --out <dir>
+                                              Emit Hermes project + report + graph + IR
+
+# IR utilities
+praxis ir validate <file>                     Lint IR against schema
+praxis ir diff <a> <b>                        Structural diff between two IRs
 ```
 
 For a step-by-step first-day walkthrough on a real project, see [`docs/migrating-real-projects.md`](docs/migrating-real-projects.md).
@@ -181,11 +201,12 @@ For a step-by-step first-day walkthrough on a real project, see [`docs/migrating
 - **v0.2.** Prompt clustering & tool-sequence repetition detection (`praxis skills extract`). Golden-file fixture lock. `doctor` and `--version`. Strict mypy in CI.
 - **v0.3.** `praxis explain <node>` for drilling into classifications. Robust analyzer error handling (broken YAML → diagnostic, not crash). Secrets classifier on env vars (🔐 in the report). Real-project walkthrough doc.
 - **v0.4.** Migration checklist in the report (actionable playbook, not just a diagnostic). `praxis init` scaffolder. `--json` output for scan + explain.
-- **v0.5 (current).** `praxis check` (CI-friendly pre-flight validator). `when:` clause preservation through translation (auto-emitted as `_praxis_when` with a TODO for verification).
-- **v0.6.** LLM-assisted intent inference with content-addressed caching. Memory schema beyond KV/vector. Round-trip tests (Hermes → IR → Hermes).
-- **v0.7.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
-- **v0.8.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
-- **v0.9.** VS Code extension surfacing the migration report as inline annotations.
+- **v0.5.** `praxis check` (CI-friendly pre-flight validator). `when:` clause preservation through translation (auto-emitted as `_praxis_when` with a TODO for verification).
+- **v0.6 (current).** `for_each` loop preservation (mirrors `when:` pattern). `praxis stats` for at-a-glance analytics. README + CLI reference polish.
+- **v0.7.** LLM-assisted intent inference with content-addressed caching. Memory schema beyond KV/vector. Round-trip tests (Hermes → IR → Hermes).
+- **v0.8.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
+- **v0.9.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
+- **v0.10.** VS Code extension surfacing the migration report as inline annotations.
 - **v1.0.** Stable IR. Backend authoring guide. Public benchmark fixture suite. PyPI release.
 
 ## Contributing

@@ -4,6 +4,19 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-05-23
+
+### Added
+- **`for_each` loop preservation in translation** — mirrors the `when:` clause pattern. Workflow steps with a `for_each` clause now carry the collection expression into the generated Hermes skill as `_praxis_for_each`, with a TODO suggesting the loop typically belongs *inside* the tool implementation on the Hermes side rather than in the skill procedure.
+- **`praxis stats <path>`** — quick at-a-glance project analytics: node counts by kind, edge counts by kind, portability tier distribution, total prompt body characters, diagnostic count. `--json` for programmatic use. Useful for sizing a migration up front.
+
+### Changed
+- **README**: rewritten hero ("the playbook is the product"); CLI reference reorganized by purpose (Discovery / Read-only analysis / Translation / IR utilities); "What you get from praxis migrate" section shows the output tree; status bumped to reflect v0.5 features.
+
+### Tests
+- 4 new tests: 2 for `for_each` (preserved into procedure, generates TODO), 2 for `praxis stats` (table output, JSON output).
+- Total: 135 tests passing.
+
 ## [0.5.0] — 2026-05-23
 
 ### Added
@@ -90,7 +103,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.2.0...v0.3.0

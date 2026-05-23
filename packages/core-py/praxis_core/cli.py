@@ -285,6 +285,72 @@ def skills_extract(
 
 
 @app.command()
+def stats(
+    path: Path = typer.Argument(
+        ..., exists=True, file_okay=False, dir_okay=True, help="Source project root."
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Print stats as JSON."),
+) -> None:
+    """Quick at-a-glance project analytics — useful for sizing a migration up front.
+
+    Prints node counts by kind, tier distribution, edge counts by kind, and
+    aggregated prompt length. No emission, no file changes.
+    """
+    ir = build_ir(path)
+
+    nodes_by_kind: dict[str, int] = {}
+    for n in ir.nodes:
+        nk = n.kind if isinstance(n.kind, str) else n.kind.value
+        nodes_by_kind[nk] = nodes_by_kind.get(nk, 0) + 1
+
+    edges_by_kind: dict[str, int] = {}
+    for e in ir.edges:
+        ek = e.kind if isinstance(e.kind, str) else e.kind.value
+        edges_by_kind[ek] = edges_by_kind.get(ek, 0) + 1
+
+    tiers = _tier_counts(ir)
+
+    prompt_chars = sum(
+        len((n.metadata or {}).get("body") or "")
+        for n in ir.nodes
+        if (n.kind.value if hasattr(n.kind, "value") else n.kind) == NodeKind.PROMPT.value
+    )
+
+    data = {
+        "nodes_total": len(ir.nodes),
+        "nodes_by_kind": dict(sorted(nodes_by_kind.items())),
+        "edges_total": len(ir.edges),
+        "edges_by_kind": dict(sorted(edges_by_kind.items())),
+        "tier_counts": dict(sorted(tiers.items())),
+        "diagnostics": len(ir.diagnostics),
+        "prompt_chars_total": prompt_chars,
+    }
+    if json_output:
+        typer.echo(json.dumps(data, indent=2, sort_keys=True))
+        return
+
+    table = Table(title="praxis stats", show_lines=False)
+    table.add_column("Metric")
+    table.add_column("Value", justify="right")
+    table.add_row("Total nodes", str(data["nodes_total"]))
+    for nk_label, count in nodes_by_kind.items():
+        table.add_row(f"  by kind: {nk_label}", str(count))
+    table.add_row("Total edges", str(data["edges_total"]))
+    for ek_label, count in edges_by_kind.items():
+        table.add_row(f"  by kind: {ek_label}", str(count))
+    table.add_row("Diagnostics", str(data["diagnostics"]))
+    table.add_row("Prompt body chars", str(data["prompt_chars_total"]))
+    console.print(table)
+
+    tier_table = Table(title="Portability tiers", show_lines=False)
+    tier_table.add_column("Tier")
+    tier_table.add_column("Count", justify="right")
+    for tier_label, count in tiers.items():
+        tier_table.add_row(tier_label, str(count))
+    console.print(tier_table)
+
+
+@app.command()
 def check(
     path: Path = typer.Argument(
         ..., exists=True, file_okay=False, dir_okay=True, help="Source project root."

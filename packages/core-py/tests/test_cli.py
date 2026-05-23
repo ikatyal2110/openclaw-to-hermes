@@ -38,6 +38,22 @@ def test_cli_doctor_passes() -> None:
     assert "IR JSON schema" in result.output
 
 
+def test_cli_stats_prints_table(sample_root: Path) -> None:
+    result = runner.invoke(app, ["stats", str(sample_root)])
+    assert result.exit_code == 0
+    assert "Total nodes" in result.output
+    assert "Portability tiers" in result.output
+
+
+def test_cli_stats_json_output(sample_root: Path) -> None:
+    result = runner.invoke(app, ["stats", str(sample_root), "--json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["nodes_total"] > 0
+    assert "tier_counts" in payload
+    assert "nodes_by_kind" in payload
+
+
 def test_cli_check_passes_clean_project(sample_root: Path) -> None:
     result = runner.invoke(app, ["check", str(sample_root)])
     assert result.exit_code == 0

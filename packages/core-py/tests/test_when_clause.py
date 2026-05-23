@@ -57,3 +57,45 @@ def test_step_without_when_clause_has_no_praxis_when(tmp_path: Path) -> None:
     skill = next(s for s in hermes.skills if s.name == "branchy")
     classify = next(p for p in skill.procedure if p.get("as") == "classify")
     assert "_praxis_when" not in classify
+
+
+def _make_project_with_for_each(tmp_path: Path) -> Path:
+    project = tmp_path / "loopy"
+    (project / "workflows").mkdir(parents=True)
+    (project / "plugins").mkdir()
+    (project / "workflows" / "loopy.yaml").write_text(
+        """name: loopy
+description: "Process each item in a list."
+steps:
+  - id: fetch
+    plugin: fetch_articles
+  - id: process
+    plugin: process_one
+    for_each: "${steps.fetch.output.items}"
+"""
+    )
+    (project / "plugins" / "fetch_articles.yaml").write_text(
+        "name: fetch_articles\nruntime: http\nspec: {url: http://x}\n"
+    )
+    (project / "plugins" / "process_one.yaml").write_text(
+        "name: process_one\nruntime: http\nspec: {url: http://y}\n"
+    )
+    return project
+
+
+def test_for_each_survives_into_procedure(tmp_path: Path) -> None:
+    project = _make_project_with_for_each(tmp_path)
+    ir = build_ir(project)
+    hermes = translate_openclaw_to_hermes(ir)
+    skill = next(s for s in hermes.skills if s.name == "loopy")
+    process = next(p for p in skill.procedure if p.get("as") == "process")
+    assert "_praxis_for_each" in process
+    assert "items" in process["_praxis_for_each"]
+
+
+def test_for_each_produces_todo(tmp_path: Path) -> None:
+    project = _make_project_with_for_each(tmp_path)
+    ir = build_ir(project)
+    hermes = translate_openclaw_to_hermes(ir)
+    skill = next(s for s in hermes.skills if s.name == "loopy")
+    assert any("_praxis_for_each" in todo for todo in skill.todos)

@@ -42,6 +42,7 @@ def _build_skill(ir: IRGraph, wf: Node) -> HermesSkill:
     procedure: list[dict[str, Any]] = []
     prev_alias = "prev"
     conditional_steps: list[str] = []
+    looping_steps: list[str] = []
 
     for step in raw_steps:
         if not isinstance(step, dict):
@@ -62,6 +63,11 @@ def _build_skill(ir: IRGraph, wf: Node) -> HermesSkill:
             # auto-emission obvious to humans reviewing the file).
             proc_entry["_praxis_when"] = step["when"]
             conditional_steps.append(step_id)
+        if "for_each" in step:
+            # Same treatment for loops — preserve the collection expression and
+            # flag for human review.
+            proc_entry["_praxis_for_each"] = step["for_each"]
+            looping_steps.append(step_id)
         procedure.append(proc_entry)
         prev_alias = step_id
 
@@ -79,6 +85,12 @@ def _build_skill(ir: IRGraph, wf: Node) -> HermesSkill:
         todos.append(
             f"Conditional step(s) {', '.join(conditional_steps)} preserved as `_praxis_when` — "
             "verify the expression syntax on the Hermes side and rename to `when:` once confirmed."
+        )
+    if looping_steps:
+        todos.append(
+            f"Loop step(s) {', '.join(looping_steps)} preserved as `_praxis_for_each` — "
+            "Hermes typically handles collections inside a tool; consider whether the loop "
+            "should move into the tool implementation rather than the skill procedure."
         )
 
     # Reflect webhook triggers in when_to_use
