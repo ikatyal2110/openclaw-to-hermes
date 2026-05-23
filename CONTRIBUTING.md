@@ -15,6 +15,12 @@ pnpm install
 pnpm -r build
 ```
 
+Sanity-check the install:
+
+```bash
+praxis doctor
+```
+
 Run the canonical fixture end-to-end:
 
 ```bash
@@ -23,33 +29,64 @@ praxis migrate examples/openclaw-sample --out /tmp/praxis-out
 
 You should see `MIGRATION_REPORT.md`, `architecture.mmd`, `ir.json`, and a `hermes/` tree under `/tmp/praxis-out`.
 
+## Running tests, lint, types
+
+These four commands match exactly what CI runs. Everything must pass before a PR merges.
+
+```bash
+cd packages/core-py
+ruff check .
+ruff format --check .
+mypy praxis_core              # strict mode — no continue-on-error
+pytest -q                     # 84+ tests, including the golden-file regression
+```
+
+For a tighter loop while developing: `pytest -q -x --ff` (stop on first failure, run failures first).
+
 ## The fastest way to help
 
 Add a fixture. `tools/fixtures/` is where we want to grow a public benchmark suite of real-ish OpenClaw projects. Each fixture is a directory with:
 
 - The OpenClaw source (`openclaw.yaml`, `workflows/`, etc.).
 - An expected `ir.json` (the result of `praxis scan ... --emit-ir`).
-- An expected `out/` tree (the result of `praxis migrate ...`).
+- An expected `hermes/` tree + `architecture.mmd` (the result of `praxis migrate ...`).
 - A short `README.md` explaining what's interesting about it.
 
 When a fixture fails to round-trip, that's the bug we want.
 
+See [`tools/fixtures/README.md`](tools/fixtures/README.md) for the layout. The `baseline/` fixture is an exception (it reuses `examples/openclaw-sample/` as its source); future fixtures follow the standard `source/`+`expected/` pattern.
+
+## Regenerating the baseline golden fixture
+
+If you've made an intentional change to the analyzer/translator/emitter that affects the baseline output:
+
+```bash
+praxis migrate examples/openclaw-sample --out /tmp/baseline-refresh
+# Then refresh tools/fixtures/baseline/expected/ from /tmp/baseline-refresh,
+# normalizing project.analyzed_at and project.source_root in ir.json to the
+# literal string "NORMALIZED" (the regression test normalizes the same fields).
+```
+
+The test in `packages/core-py/tests/test_fixtures.py` will fail until the golden is refreshed. Mention the regeneration in your PR description.
+
 ## Code organization
 
 - `packages/core-py/praxis_core/analyzers/` — read a framework, emit partial IR.
-- `packages/core-py/praxis_core/resolver.py` — link references, drop orphans.
+- `packages/core-py/praxis_core/resolver.py` — link references, drop orphans, dedupe.
 - `packages/core-py/praxis_core/scoring/` — rule-based portability classifier. **Do not LLM-ify this without strong reason.**
 - `packages/core-py/praxis_core/translators/` — IR → IR (per `source × target × node-kind`).
 - `packages/core-py/praxis_core/emitters/` — IR → files on disk.
 - `packages/core-py/praxis_core/reports/` — Markdown + Mermaid rendering.
+- `packages/core-py/praxis_core/extract/` — prompt clustering for `praxis skills extract`.
 - `packages/ir/` — TypeScript mirror of the IR types.
 - `packages/cli/` — thin TS shell around the Python CLI.
 
 ## Style
 
-- Python: `ruff` and `mypy --strict`. CI will reject otherwise.
+- Python: `ruff` (lint + format) and `mypy --strict`. CI will reject otherwise.
 - TypeScript: strict, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`.
 - Default to writing no comments. If a comment is needed, explain *why*, not what.
+- Test the unit you wrote — every public function should have at least one test, and every classifier rule has its own test (see `tests/test_classifier.py`).
 
 ## IR changes
 
@@ -62,16 +99,37 @@ The IR is the public contract. Changing it touches everything downstream.
 
 Anything that:
 - Adds a node `kind` or `capability`.
-- Adds an extension point.
+- Adds an extension point or plugin interface.
 - Changes the portability classifier's tier definitions.
 - Adds a new source or target framework.
+- Introduces a new external dependency.
+
+See `docs/adr/` for examples. ADRs are short (one page is fine) and have the format: Context / Decision / Consequences.
 
 ## Filing issues
 
-Two issue templates are the most useful:
+Three issue templates are the most useful:
 
 - **"Praxis ate my workflow"** — paste a minimal OpenClaw repro + expected Hermes output. We turn these into fixtures.
 - **"This translation is wrong"** — paste the IR node, the emitter output, and a one-paragraph explanation of why it's wrong. Be specific about *which* tier the node should be in.
+- **Feature request** — open a discussion first if it's nontrivial. The bar is concrete user pain.
+
+## Commit & PR conventions
+
+- One logical change per commit. The CI runs on every push.
+- Commit messages: imperative mood ("add X", "fix Y"), one-line summary under 70 chars, optional body explaining *why*.
+- PRs: include the local verification you ran (`ruff check`, `mypy`, `pytest`) and any baseline-regeneration notes.
+- All public-facing changes (new commands, new flags, schema bumps) need a `CHANGELOG.md` entry under `## [Unreleased]`.
+
+## Release process
+
+We use semantic versioning. To cut a release:
+
+1. Move the `## [Unreleased]` section in `CHANGELOG.md` under a new `## [X.Y.Z] — YYYY-MM-DD` heading.
+2. Bump `__version__` in `packages/core-py/praxis_core/__init__.py` and `version` in `pyproject.toml`.
+3. Commit `release: vX.Y.Z`.
+4. Tag: `git tag vX.Y.Z && git push --tags`.
+5. Create a GitHub release using the CHANGELOG entry as the body.
 
 ## Code of conduct
 

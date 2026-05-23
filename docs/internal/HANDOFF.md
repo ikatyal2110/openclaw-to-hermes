@@ -40,7 +40,7 @@
 ```
 openclaw-to-hermes/
 ├── README.md                        # user-facing pitch
-├── HANDOFF.md                       # this file
+├── CHANGELOG.md                     # versioned release notes
 ├── LICENSE  CONTRIBUTING.md  CODE_OF_CONDUCT.md  SECURITY.md
 ├── .gitignore  package.json  pnpm-workspace.yaml  tsconfig.base.json
 ├── .github/
