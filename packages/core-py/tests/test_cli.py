@@ -18,6 +18,26 @@ def test_cli_help_exits_zero() -> None:
     assert "praxis" in result.output.lower()
 
 
+def test_cli_version_flag() -> None:
+    result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0
+    assert "praxis" in result.output
+    assert "IR schema" in result.output
+
+
+def test_cli_version_short_flag() -> None:
+    result = runner.invoke(app, ["-V"])
+    assert result.exit_code == 0
+
+
+def test_cli_doctor_passes() -> None:
+    result = runner.invoke(app, ["doctor"])
+    assert result.exit_code == 0
+    assert "All checks passed" in result.output
+    assert "praxis-core" in result.output
+    assert "IR JSON schema" in result.output
+
+
 def test_cli_scan_prints_summary(sample_root: Path) -> None:
     result = runner.invoke(app, ["scan", str(sample_root)])
     assert result.exit_code == 0

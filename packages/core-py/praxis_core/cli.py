@@ -9,7 +9,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from praxis_core import IR_VERSION
+from praxis_core import IR_VERSION, __version__
 from praxis_core.extract import extract_prompt_clusters
 from praxis_core.ir import IRGraph
 from praxis_core.ir.models import NodeKind
@@ -28,6 +28,26 @@ app.add_typer(ir_app, name="ir")
 app.add_typer(skills_app, name="skills")
 
 console = Console()
+
+
+def _print_version(value: bool) -> None:
+    if value:
+        typer.echo(f"praxis {__version__} (IR schema v{IR_VERSION})")
+        raise typer.Exit()
+
+
+@app.callback()
+def _root(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        callback=_print_version,
+        is_eager=True,
+        help="Print version and IR schema version, then exit.",
+    ),
+) -> None:
+    """Praxis CLI root. Subcommands handle scan/migrate/etc."""
 
 
 @app.command()
@@ -187,6 +207,84 @@ def skills_extract(
         console.print(f"[dim]Report written to {report}[/dim]")
 
 
+@app.command()
+def doctor() -> None:
+    """Sanity-check the local install. Useful as a first command after install."""
+    import importlib
+    import platform
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as dist_version
+
+    checks: list[tuple[str, bool, str]] = []
+
+    checks.append(("python", True, f"{platform.python_version()} on {platform.system().lower()}"))
+    checks.append(("praxis-core", True, f"{__version__} (IR schema v{IR_VERSION})"))
+
+    # Map import name → PyPI distribution name (mostly identical, except PyYAML).
+    deps = [
+        ("yaml", "PyYAML"),
+        ("pydantic", "pydantic"),
+        ("jsonschema", "jsonschema"),
+        ("typer", "typer"),
+        ("rich", "rich"),
+        ("networkx", "networkx"),
+    ]
+    for import_name, dist_name in deps:
+        try:
+            importlib.import_module(import_name)
+            try:
+                ver = dist_version(dist_name)
+            except PackageNotFoundError:
+                ver = "installed (version unknown)"
+            checks.append((import_name, True, ver))
+        except ImportError as exc:
+            checks.append((import_name, False, f"missing: {exc}"))
+
+    try:
+        schema_path = _find_schema(quiet=True)
+        checks.append(("IR JSON schema", True, str(schema_path)))
+    except FileNotFoundError as exc:
+        checks.append(("IR JSON schema", False, str(exc)))
+
+    fixture = _find_baseline_fixture()
+    if fixture is not None:
+        checks.append(("baseline fixture", True, str(fixture)))
+    else:
+        checks.append(("baseline fixture", False, "not found (clone the repo to access it)"))
+
+    if all(ok for _, ok, _ in checks):
+        try:
+            build_ir(fixture) if fixture else None
+            if fixture is not None:
+                checks.append(("end-to-end scan", True, "OK"))
+        except Exception as exc:
+            checks.append(("end-to-end scan", False, f"{type(exc).__name__}: {exc}"))
+
+    table = Table(title="praxis doctor", show_lines=False)
+    table.add_column("Check")
+    table.add_column("Status", justify="center")
+    table.add_column("Detail")
+    for name, ok, detail in checks:
+        table.add_row(name, "[green]OK[/green]" if ok else "[red]FAIL[/red]", detail)
+    console.print(table)
+
+    failed = [name for name, ok, _ in checks if not ok]
+    if failed:
+        console.print(f"[red]{len(failed)} check(s) failed:[/red] {', '.join(failed)}")
+        raise typer.Exit(1)
+    console.print("[green]All checks passed.[/green]")
+
+
+def _find_baseline_fixture() -> Path | None:
+    """Walk up from cwd and the installed package looking for examples/openclaw-sample/."""
+    for start in (Path.cwd(), Path(__file__).resolve()):
+        for parent in [start, *start.parents]:
+            cand = parent / "examples" / "openclaw-sample"
+            if cand.is_dir():
+                return cand
+    return None
+
+
 def _print_summary(ir: IRGraph) -> None:
     table = Table(title="Praxis scan")
     table.add_column("Kind")
@@ -206,8 +304,12 @@ def _print_summary(ir: IRGraph) -> None:
         console.print(f"[yellow]{len(ir.diagnostics)} diagnostic(s).[/yellow]")
 
 
-def _find_schema() -> Path:
-    """Locate schemas/praxis-ir.schema.json relative to the repo root."""
+def _find_schema(quiet: bool = False) -> Path:
+    """Locate schemas/praxis-ir.schema.json relative to the repo root.
+
+    Raises FileNotFoundError if `quiet=True` and the schema can't be found;
+    otherwise prints a red error and exits with code 2 (CLI default).
+    """
     cwd = Path.cwd()
     for parent in [cwd, *cwd.parents]:
         candidate = parent / "schemas" / "praxis-ir.schema.json"
@@ -219,6 +321,10 @@ def _find_schema() -> Path:
         candidate = parent / "schemas" / "praxis-ir.schema.json"
         if candidate.exists():
             return candidate
+    if quiet:
+        raise FileNotFoundError(
+            "praxis-ir.schema.json not found by walking up from cwd or the installed package."
+        )
     console.print("[red]Could not locate praxis-ir.schema.json[/red]")
     raise typer.Exit(2)
 
