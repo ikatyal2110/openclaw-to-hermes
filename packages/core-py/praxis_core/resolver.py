@@ -1,4 +1,5 @@
 """Resolve stage: validates cross-references, drops orphan edges with diagnostics, dedupes."""
+
 from __future__ import annotations
 
 from praxis_core.ir import IRGraph
@@ -18,7 +19,7 @@ def _dedupe_nodes(ir: IRGraph) -> None:
     """If two analyzers emit the same node id, keep the one with the richer payload."""
     by_id: dict[str, int] = {}
     keep: list = []
-    for idx, node in enumerate(ir.nodes):
+    for node in ir.nodes:
         if node.id in by_id:
             existing = keep[by_id[node.id]]
             if _richness(node) > _richness(existing):

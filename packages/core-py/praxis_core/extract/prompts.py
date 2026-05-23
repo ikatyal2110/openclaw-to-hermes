@@ -4,6 +4,7 @@ Rule-based on purpose (mirrors the classifier philosophy in scoring/classifier.p
 opaque embedding scores would obscure why two prompts cluster, and the value of
 this command is the explainability of *which tokens overlap*, not raw recall.
 """
+
 from __future__ import annotations
 
 import re
@@ -29,7 +30,7 @@ def tokenize_prompt(body: str) -> list[str]:
 
 
 def _bigrams(tokens: list[str]) -> set[tuple[str, str]]:
-    return set(zip(tokens, tokens[1:])) if len(tokens) >= 2 else set()
+    return set(zip(tokens, tokens[1:], strict=False)) if len(tokens) >= 2 else set()
 
 
 def jaccard_bigrams(a: str, b: str) -> float:
@@ -87,7 +88,7 @@ def cluster_prompts(
 
     pair_scores: dict[tuple[str, str], float] = {}
     for i, a in enumerate(names):
-        for b in names[i + 1:]:
+        for b in names[i + 1 :]:
             score = jaccard_bigrams(prompts[a], prompts[b])
             if score >= threshold:
                 pair_scores[(a, b)] = score

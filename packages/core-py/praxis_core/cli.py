@@ -1,10 +1,9 @@
 """praxis — CLI entry point."""
+
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -32,8 +31,10 @@ console = Console()
 
 @app.command()
 def scan(
-    path: Path = typer.Argument(..., exists=True, file_okay=False, dir_okay=True, help="Source project root."),
-    emit_ir: Optional[Path] = typer.Option(None, "--emit-ir", help="Write the IR JSON to this path."),
+    path: Path = typer.Argument(
+        ..., exists=True, file_okay=False, dir_okay=True, help="Source project root."
+    ),
+    emit_ir: Path | None = typer.Option(None, "--emit-ir", help="Write the IR JSON to this path."),
 ) -> None:
     """Walk the project, build the IR, and print a summary table."""
     ir = build_ir(path)
@@ -71,7 +72,9 @@ def report(
 @app.command(name="migrate")
 def migrate_cmd(
     path: Path = typer.Argument(..., exists=True, file_okay=False, dir_okay=True),
-    target: str = typer.Option("hermes", "--target", help="Target framework (only 'hermes' in v0.1)."),
+    target: str = typer.Option(
+        "hermes", "--target", help="Target framework (only 'hermes' in v0.1)."
+    ),
     out: Path = typer.Option(Path("./out"), "--out", help="Output directory."),
 ) -> None:
     """Translate the project to the target framework. Writes files + report + IR."""
@@ -102,7 +105,9 @@ def ir_validate(
     except jsonschema.ValidationError as exc:
         console.print(f"[red]Invalid:[/red] {exc.message}")
         raise typer.Exit(1) from None
-    console.print(f"[green]OK[/green] — IR v{data.get('praxis_ir_version', '?')} validates against schema v{IR_VERSION}.")
+    console.print(
+        f"[green]OK[/green] — IR v{data.get('praxis_ir_version', '?')} validates against schema v{IR_VERSION}."
+    )
 
 
 @ir_app.command("diff")
@@ -138,14 +143,22 @@ def ir_diff(
 
 @skills_app.command("extract")
 def skills_extract(
-    path: Path = typer.Argument(..., exists=True, file_okay=False, dir_okay=True, help="Source project root."),
-    threshold: float = typer.Option(0.4, "--threshold", min=0.0, max=1.0, help="Minimum Jaccard similarity to cluster."),
-    report: Optional[Path] = typer.Option(None, "--report", help="Write a Markdown report to this path."),
+    path: Path = typer.Argument(
+        ..., exists=True, file_okay=False, dir_okay=True, help="Source project root."
+    ),
+    threshold: float = typer.Option(
+        0.4, "--threshold", min=0.0, max=1.0, help="Minimum Jaccard similarity to cluster."
+    ),
+    report: Path | None = typer.Option(
+        None, "--report", help="Write a Markdown report to this path."
+    ),
 ) -> None:
     """Cluster prompts by structural similarity; surface candidate skill extractions."""
     ir = build_ir(path)
     total_prompts = sum(
-        1 for n in ir.nodes if (n.kind.value if hasattr(n.kind, "value") else n.kind) == NodeKind.PROMPT.value
+        1
+        for n in ir.nodes
+        if (n.kind.value if hasattr(n.kind, "value") else n.kind) == NodeKind.PROMPT.value
     )
     clusters = extract_prompt_clusters(ir, threshold=threshold)
 
@@ -167,7 +180,9 @@ def skills_extract(
     console.print(f"[dim]{total_prompts} prompt(s) scanned, {len(clusters)} cluster(s).[/dim]")
 
     if report:
-        report.write_text(render_extract_report(clusters, threshold, total_prompts), encoding="utf-8")
+        report.write_text(
+            render_extract_report(clusters, threshold, total_prompts), encoding="utf-8"
+        )
         console.print(f"[dim]Report written to {report}[/dim]")
 
 
@@ -181,7 +196,9 @@ def _print_summary(ir) -> None:  # noqa: ANN001
         if not n.portability:
             continue
         kind = n.kind if isinstance(n.kind, str) else n.kind.value
-        tier = n.portability.tier if isinstance(n.portability.tier, str) else n.portability.tier.value
+        tier = (
+            n.portability.tier if isinstance(n.portability.tier, str) else n.portability.tier.value
+        )
         table.add_row(kind, n.name, tier, f"{n.portability.score:.2f}")
     console.print(table)
     if ir.diagnostics:

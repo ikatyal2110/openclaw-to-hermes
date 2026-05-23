@@ -1,4 +1,5 @@
 """OpenClaw memory store → Hermes memory schema."""
+
 from __future__ import annotations
 
 from praxis_core.ir import IRGraph

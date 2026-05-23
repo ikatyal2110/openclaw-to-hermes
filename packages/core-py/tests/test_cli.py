@@ -1,4 +1,5 @@
 """Smoke tests for the user-facing CLI. Catches argv wiring and exit-code regressions."""
+
 from __future__ import annotations
 
 import json
@@ -60,7 +61,9 @@ def test_cli_migrate_writes_output_tree(sample_root: Path, tmp_path: Path) -> No
 
 def test_cli_migrate_unknown_target_exits_nonzero(sample_root: Path, tmp_path: Path) -> None:
     out = tmp_path / "out"
-    result = runner.invoke(app, ["migrate", str(sample_root), "--target", "langgraph", "--out", str(out)])
+    result = runner.invoke(
+        app, ["migrate", str(sample_root), "--target", "langgraph", "--out", str(out)]
+    )
     assert result.exit_code != 0
 
 

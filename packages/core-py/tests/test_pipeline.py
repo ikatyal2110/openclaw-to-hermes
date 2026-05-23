@@ -1,4 +1,5 @@
 """End-to-end: scan → migrate. The single best regression net for the project."""
+
 from __future__ import annotations
 
 import json
@@ -23,7 +24,9 @@ def test_migrate_writes_expected_files(sample_root: Path, tmp_out: Path) -> None
     assert (tmp_out / "hermes" / "prompts" / "summarize.j2").exists()
 
 
-def test_ir_json_validates_against_schema(repo_root: Path, sample_root: Path, tmp_out: Path) -> None:
+def test_ir_json_validates_against_schema(
+    repo_root: Path, sample_root: Path, tmp_out: Path
+) -> None:
     migrate(sample_root, tmp_out)
     schema = json.loads((repo_root / "schemas" / "praxis-ir.schema.json").read_text())
     ir_payload = json.loads((tmp_out / "ir.json").read_text())

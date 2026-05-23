@@ -1,4 +1,5 @@
 """Reads services/services.yaml — declared external dependencies."""
+
 from __future__ import annotations
 
 from pathlib import Path

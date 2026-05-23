@@ -5,6 +5,7 @@ that originate from a specific domain (workflows, plugins, prompts, ...).
 References to other domains are emitted as edges keyed by *intended* node IDs;
 the resolver stitches them later.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

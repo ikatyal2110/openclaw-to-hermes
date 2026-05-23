@@ -1,4 +1,5 @@
 """Prompts pass through verbatim — content addressed by name."""
+
 from __future__ import annotations
 
 from praxis_core.ir import IRGraph

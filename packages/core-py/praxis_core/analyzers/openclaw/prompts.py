@@ -1,4 +1,5 @@
 """Reads prompts/*.j2 and prompts/*.txt — emits one prompt node per file."""
+
 from __future__ import annotations
 
 from pathlib import Path

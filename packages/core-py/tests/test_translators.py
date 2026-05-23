@@ -1,4 +1,5 @@
 """Translators turn the resolved-and-scored IR into a HermesProject."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -18,7 +19,14 @@ def test_translator_emits_tools_for_each_plugin(sample_root: Path) -> None:
     ir = build_ir(sample_root)
     project = translate_openclaw_to_hermes(ir)
     names = {t.name for t in project.tools}
-    for expected in ["fetch_articles", "dedupe_seen", "llm_summarize", "slack_post", "classify_ticket", "ticket_router"]:
+    for expected in [
+        "fetch_articles",
+        "dedupe_seen",
+        "llm_summarize",
+        "slack_post",
+        "classify_ticket",
+        "ticket_router",
+    ]:
         assert expected in names
 
 

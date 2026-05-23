@@ -1,4 +1,5 @@
 """Resolver invariants: dangling edges flagged, duplicates removed, nodes deduped."""
+
 from __future__ import annotations
 
 from praxis_core.ir import IRGraph

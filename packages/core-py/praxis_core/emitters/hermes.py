@@ -1,4 +1,5 @@
 """Writes a HermesProject to disk in the on-disk convention documented in docs/hermes-format.md."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -8,7 +9,6 @@ import yaml
 from praxis_core.translators.openclaw_to_hermes.types import (
     HermesMemory,
     HermesProject,
-    HermesPrompt,
     HermesSchedule,
     HermesSkill,
     HermesTool,
@@ -24,7 +24,13 @@ def emit_hermes_project(project: HermesProject, out_root: Path) -> dict[str, lis
     (hermes_root / "memory").mkdir(parents=True, exist_ok=True)
     (hermes_root / "prompts").mkdir(parents=True, exist_ok=True)
 
-    written: dict[str, list[str]] = {"skills": [], "tools": [], "schedules": [], "memory": [], "prompts": []}
+    written: dict[str, list[str]] = {
+        "skills": [],
+        "tools": [],
+        "schedules": [],
+        "memory": [],
+        "prompts": [],
+    }
 
     for skill in project.skills:
         path = hermes_root / "skills" / f"{skill.name}.yaml"

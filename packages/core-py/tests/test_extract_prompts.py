@@ -1,4 +1,5 @@
 """Unit tests for praxis_core.extract.prompts — tokenizer, similarity, clustering."""
+
 from __future__ import annotations
 
 from praxis_core.extract.prompts import (

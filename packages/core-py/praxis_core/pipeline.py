@@ -3,6 +3,7 @@
 Each function here corresponds to a CLI subcommand's heavy lifting and is the
 unit subcommand handlers test against.
 """
+
 from __future__ import annotations
 
 import json

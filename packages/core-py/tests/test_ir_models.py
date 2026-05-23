@@ -1,4 +1,5 @@
 """IR model invariants. Catches the subtle pydantic-alias bug class."""
+
 from __future__ import annotations
 
 import json
@@ -6,6 +7,7 @@ from pathlib import Path
 
 import jsonschema
 import pytest
+from pydantic import ValidationError
 
 from praxis_core import IR_VERSION
 from praxis_core.ir import IRGraph
@@ -87,7 +89,7 @@ def test_portability_tier_serializes_as_string() -> None:
 
 
 def test_unknown_kind_rejected() -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         Node(
             id="x",
             kind="nope",  # type: ignore[arg-type]

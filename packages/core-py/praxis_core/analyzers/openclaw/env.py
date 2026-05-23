@@ -1,4 +1,5 @@
 """Extracts declared environment variables from openclaw.yaml and .env.example."""
+
 from __future__ import annotations
 
 from pathlib import Path

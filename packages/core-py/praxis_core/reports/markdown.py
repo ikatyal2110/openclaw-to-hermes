@@ -1,4 +1,5 @@
 """Markdown migration report. Per-node feasibility, blockers, and TODOs."""
+
 from __future__ import annotations
 
 from collections import Counter
@@ -35,7 +36,11 @@ def _summary(ir: IRGraph) -> list[str]:
     tiers = Counter()
     for n in ir.nodes:
         if n.portability:
-            tier = n.portability.tier if isinstance(n.portability.tier, str) else n.portability.tier.value
+            tier = (
+                n.portability.tier
+                if isinstance(n.portability.tier, str)
+                else n.portability.tier.value
+            )
             tiers[tier] += 1
     total = sum(tiers.values()) or 1
     portable = tiers.get(PortabilityTier.PORTABLE.value, 0)
@@ -50,13 +55,22 @@ def _summary(ir: IRGraph) -> list[str]:
 
 
 def _node_table(ir: IRGraph) -> list[str]:
-    out = ["## Per-node feasibility", "", "| Kind | Name | Tier | Score | Rationale |", "|---|---|---|---|---|"]
+    out = [
+        "## Per-node feasibility",
+        "",
+        "| Kind | Name | Tier | Score | Rationale |",
+        "|---|---|---|---|---|",
+    ]
     for n in sorted(ir.nodes, key=lambda x: (_kind(x), x.name)):
         if not n.portability:
             continue
-        tier = n.portability.tier if isinstance(n.portability.tier, str) else n.portability.tier.value
+        tier = (
+            n.portability.tier if isinstance(n.portability.tier, str) else n.portability.tier.value
+        )
         rationale = (n.portability.rationale or "").replace("|", "\\|")
-        out.append(f"| `{_kind(n)}` | `{n.name}` | {tier} | {n.portability.score:.2f} | {rationale} |")
+        out.append(
+            f"| `{_kind(n)}` | `{n.name}` | {tier} | {n.portability.score:.2f} | {rationale} |"
+        )
     out.append("")
     return out
 
@@ -92,10 +106,19 @@ def _services_section(ir: IRGraph) -> list[str]:
     services = [n for n in ir.nodes if _kind(n) == NodeKind.SERVICE.value]
     if not services:
         return []
-    out = ["## External services", "", "Declared in OpenClaw — wire equivalents on the Hermes side:", "", "| Service | Kind | Notes |", "|---|---|---|"]
+    out = [
+        "## External services",
+        "",
+        "Declared in OpenClaw — wire equivalents on the Hermes side:",
+        "",
+        "| Service | Kind | Notes |",
+        "|---|---|---|",
+    ]
     for s in services:
         spec = (s.metadata or {}).get("spec") or {}
-        out.append(f"| `{s.name}` | `{spec.get('kind', '?')}` | `{spec.get('base_url') or spec.get('dsn') or ''}` |")
+        out.append(
+            f"| `{s.name}` | `{spec.get('kind', '?')}` | `{spec.get('base_url') or spec.get('dsn') or ''}` |"
+        )
     out.append("")
     return out
 

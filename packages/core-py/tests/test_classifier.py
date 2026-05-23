@@ -1,4 +1,5 @@
 """Portability classifier — one test per documented mapping rule."""
+
 from __future__ import annotations
 
 from praxis_core.ir.models import Intent, Node, NodeKind, Provenance

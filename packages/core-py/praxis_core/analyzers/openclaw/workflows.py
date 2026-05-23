@@ -1,6 +1,7 @@
 """Reads workflows/*.yaml. Emits one workflow node + one scheduler per cron trigger,
 plus control/data edges between workflow steps and the referenced plugins.
 """
+
 from __future__ import annotations
 
 import re
@@ -110,7 +111,12 @@ class WorkflowsAnalyzer(Analyzer):
                     )
                 )
                 ir.edges.append(
-                    Edge(**{"from": sched_id}, to=wf_id, kind=EdgeKind.TRIGGER, label=trig.get("spec"))
+                    Edge(
+                        **{"from": sched_id},
+                        to=wf_id,
+                        kind=EdgeKind.TRIGGER,
+                        label=trig.get("spec"),
+                    )
                 )
             elif kind == "webhook":
                 sched_name = f"{name}__webhook_{idx}"
@@ -130,7 +136,12 @@ class WorkflowsAnalyzer(Analyzer):
                     )
                 )
                 ir.edges.append(
-                    Edge(**{"from": sched_id}, to=wf_id, kind=EdgeKind.TRIGGER, label=trig.get("path"))
+                    Edge(
+                        **{"from": sched_id},
+                        to=wf_id,
+                        kind=EdgeKind.TRIGGER,
+                        label=trig.get("path"),
+                    )
                 )
 
         # Steps → control edges
@@ -154,9 +165,7 @@ class WorkflowsAnalyzer(Analyzer):
                 Edge(**{"from": wf_id}, to=plugin_id, kind=EdgeKind.CONTROL, label=step.get("id"))
             )
             if prev_plugin_id is not None:
-                ir.edges.append(
-                    Edge(**{"from": prev_plugin_id}, to=plugin_id, kind=EdgeKind.DATA)
-                )
+                ir.edges.append(Edge(**{"from": prev_plugin_id}, to=plugin_id, kind=EdgeKind.DATA))
             with_block = repr(step.get("with", {}))
             for env_var in set(ENV_REF.findall(with_block)):
                 ir.edges.append(
@@ -187,13 +196,22 @@ class WorkflowsAnalyzer(Analyzer):
 
         desc = (data.get("description") or "").strip()
         if desc:
-            return Intent(description=desc, confidence=0.95, evidence=["description field present"], source="static")
+            return Intent(
+                description=desc,
+                confidence=0.95,
+                evidence=["description field present"],
+                source="static",
+            )
 
-        cron_specs = [t.get("spec") for t in triggers if isinstance(t, dict) and t.get("kind") == "cron"]
+        cron_specs = [
+            t.get("spec") for t in triggers if isinstance(t, dict) and t.get("kind") == "cron"
+        ]
         for spec in cron_specs:
             evidence.append(f"cron trigger {spec}")
             bits.append("scheduled")
-        webhook_paths = [t.get("path") for t in triggers if isinstance(t, dict) and t.get("kind") == "webhook"]
+        webhook_paths = [
+            t.get("path") for t in triggers if isinstance(t, dict) and t.get("kind") == "webhook"
+        ]
         for p in webhook_paths:
             evidence.append(f"webhook {p}")
             bits.append("webhook-driven")

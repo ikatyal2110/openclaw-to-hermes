@@ -1,6 +1,7 @@
 """Shared test fixtures. The OpenClaw sample under examples/ is the canonical input
 for all integration tests; unit tests build smaller fixtures inline.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

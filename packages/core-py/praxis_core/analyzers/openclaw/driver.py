@@ -1,7 +1,8 @@
 """Drives all OpenClaw analyzers in order and returns one merged IRGraph."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from praxis_core.analyzers.openclaw.env import EnvAnalyzer
@@ -35,7 +36,7 @@ def analyze_openclaw_project(root: Path) -> IRGraph:
             name=project_meta.get("name") if project_meta else root.name,
             source_framework="openclaw",
             source_root=str(root.resolve()),
-            analyzed_at=datetime.now(timezone.utc),
+            analyzed_at=datetime.now(UTC),
         )
     )
 

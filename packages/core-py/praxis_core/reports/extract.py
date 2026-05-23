@@ -1,5 +1,6 @@
 """Markdown renderer for `praxis skills extract`. Lists prompt clusters with
 pairwise similarities and a suggested action per cluster."""
+
 from __future__ import annotations
 
 from praxis_core.extract.prompts import PromptCluster
@@ -34,7 +35,9 @@ def render_extract_report(
         lines.append("")
         lines.append("**Members:** " + ", ".join(f"`{m}`" for m in cluster.members))
         lines.append("")
-        lines.append(f"**Similarity range:** {cluster.min_similarity:.2f} – {cluster.max_similarity:.2f}")
+        lines.append(
+            f"**Similarity range:** {cluster.min_similarity:.2f} – {cluster.max_similarity:.2f}"
+        )
         lines.append("")
         lines.append("**Pairwise scores:**")
         lines.append("")

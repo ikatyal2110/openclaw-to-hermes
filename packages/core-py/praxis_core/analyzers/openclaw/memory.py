@@ -1,4 +1,5 @@
 """Reads memory/stores.yaml — emits one memory_store node per declared store."""
+
 from __future__ import annotations
 
 from pathlib import Path

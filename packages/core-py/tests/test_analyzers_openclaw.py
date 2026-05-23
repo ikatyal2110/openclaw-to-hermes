@@ -1,4 +1,5 @@
 """Verifies each OpenClaw analyzer emits the expected nodes and edges from the fixture."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -26,14 +27,16 @@ def test_analyzer_produces_expected_workflows(sample_root: Path) -> None:
 
 def test_analyzer_produces_expected_tools(sample_root: Path) -> None:
     ir = analyze_openclaw_project(sample_root)
-    expected = sorted([
-        "fetch_articles",
-        "dedupe_seen",
-        "llm_summarize",
-        "slack_post",
-        "classify_ticket",
-        "ticket_router",
-    ])
+    expected = sorted(
+        [
+            "fetch_articles",
+            "dedupe_seen",
+            "llm_summarize",
+            "slack_post",
+            "classify_ticket",
+            "ticket_router",
+        ]
+    )
     assert _kinds(ir, NodeKind.TOOL) == expected
 
 
@@ -92,6 +95,8 @@ def test_workflow_emits_data_edges_between_consecutive_steps(sample_root: Path) 
 
 def test_intent_from_description_has_high_confidence(sample_root: Path) -> None:
     ir = analyze_openclaw_project(sample_root)
-    daily = next(n for n in ir.nodes if n.name == "daily_digest" and _node_kind(n) == NodeKind.WORKFLOW.value)
+    daily = next(
+        n for n in ir.nodes if n.name == "daily_digest" and _node_kind(n) == NodeKind.WORKFLOW.value
+    )
     assert daily.intent is not None
     assert daily.intent.confidence >= 0.9

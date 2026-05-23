@@ -1,4 +1,5 @@
 """In-memory shape of a Hermes project, produced by the translator and consumed by the emitter."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

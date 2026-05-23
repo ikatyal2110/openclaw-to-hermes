@@ -11,6 +11,7 @@ When the snapshot legitimately needs to change, regenerate with:
     # then refresh tools/fixtures/baseline/expected/ from /tmp/golden,
     # normalizing project.analyzed_at and project.source_root in ir.json.
 """
+
 from __future__ import annotations
 
 import json
@@ -56,7 +57,9 @@ def test_hermes_tree_matches_golden(actual_out: Path, baseline_dir: Path) -> Non
     expected_root = baseline_dir / "expected" / "hermes"
     actual_root = actual_out / "hermes"
 
-    expected_files = sorted(p.relative_to(expected_root) for p in expected_root.rglob("*") if p.is_file())
+    expected_files = sorted(
+        p.relative_to(expected_root) for p in expected_root.rglob("*") if p.is_file()
+    )
     actual_files = sorted(p.relative_to(actual_root) for p in actual_root.rglob("*") if p.is_file())
     assert actual_files == expected_files, "Hermes file set diverged from golden."
 

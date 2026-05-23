@@ -51,7 +51,13 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
-ignore = ["E501"]
+# UP042: (str, Enum) pattern is intentional — Pydantic v2 + use_enum_values=True
+# relies on it, and StrEnum changes the str() repr in 3.12.
+ignore = ["E501", "UP042"]
+
+[tool.ruff.lint.per-file-ignores]
+# B008: typer's Argument()/Option() must be evaluated at decoration time.
+"praxis_core/cli.py" = ["B008"]
 
 [tool.mypy]
 python_version = "3.11"

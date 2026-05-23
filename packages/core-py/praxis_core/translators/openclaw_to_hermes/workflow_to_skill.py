@@ -4,6 +4,7 @@ Skills are the highest-leverage translation: workflow steps become a `procedure`
 intent becomes `description`, and inferred triggers become `when_to_use` entries.
 Confidence interacts with portability — see docs/migration-model.md.
 """
+
 from __future__ import annotations
 
 import re

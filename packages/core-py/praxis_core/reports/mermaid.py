@@ -1,4 +1,5 @@
 """Mermaid flowchart rendering of the architecture graph."""
+
 from __future__ import annotations
 
 from praxis_core.ir import IRGraph
@@ -58,7 +59,7 @@ def render_mermaid_graph(ir: IRGraph) -> str:
         from_id = _safe(edge.from_)
         to_id = _safe(edge.to)
         if edge.label:
-            lines.append(f'    {from_id} {style} {to_id}')
+            lines.append(f"    {from_id} {style} {to_id}")
         else:
             lines.append(f"    {from_id} {style} {to_id}")
 
@@ -68,7 +69,11 @@ def render_mermaid_graph(ir: IRGraph) -> str:
         kind = node.kind if isinstance(node.kind, str) else node.kind.value
         if kind == NodeKind.ENV.value or not node.portability:
             continue
-        tier = node.portability.tier if isinstance(node.portability.tier, str) else node.portability.tier.value
+        tier = (
+            node.portability.tier
+            if isinstance(node.portability.tier, str)
+            else node.portability.tier.value
+        )
         cls = TIER_CLASS.get(tier)
         if cls:
             lines.append(f"    class {_safe(node.id)} {cls}")

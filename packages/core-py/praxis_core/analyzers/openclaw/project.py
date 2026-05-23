@@ -1,4 +1,5 @@
 """Reads openclaw.yaml — project metadata only. Other analyzers handle their own files."""
+
 from __future__ import annotations
 
 from pathlib import Path

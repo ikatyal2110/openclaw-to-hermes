@@ -2,6 +2,7 @@
 
 The JSON Schema is authoritative; these models must stay in sync.
 """
+
 from __future__ import annotations
 
 import hashlib

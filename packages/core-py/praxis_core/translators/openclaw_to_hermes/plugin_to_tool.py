@@ -1,4 +1,5 @@
 """OpenClaw plugin → Hermes tool."""
+
 from __future__ import annotations
 
 from praxis_core.ir import IRGraph
@@ -23,16 +24,15 @@ def translate_tools(ir: IRGraph, project: HermesProject) -> None:
             HermesTool(
                 name=node.name,
                 description=description,
-                runtime=runtime if runtime != "subprocess" else "http",  # subprocess shouldn't reach here
+                runtime=runtime
+                if runtime != "subprocess"
+                else "http",  # subprocess shouldn't reach here
                 spec={k: v for k, v in cfg.items() if k != "memory_store"},
                 inputs=[
                     {"name": p.name, "type": p.type or "string", "required": p.required}
                     for p in node.inputs
                 ],
-                outputs=[
-                    {"name": p.name, "type": p.type or "string"}
-                    for p in node.outputs
-                ],
+                outputs=[{"name": p.name, "type": p.type or "string"} for p in node.outputs],
             )
         )
 

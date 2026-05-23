@@ -1,4 +1,5 @@
 """Reads plugins/*.yaml and emits one IR `tool` node per plugin manifest."""
+
 from __future__ import annotations
 
 import re
@@ -59,7 +60,9 @@ class PluginsAnalyzer(Analyzer):
 
         if runtime == "http":
             capabilities += [Capability.HTTP_CALLABLE, Capability.SIDE_EFFECTING]
-            side_effects.append(SideEffect(kind=SideEffectKind.NETWORK, target=self._http_target(data)))
+            side_effects.append(
+                SideEffect(kind=SideEffectKind.NETWORK, target=self._http_target(data))
+            )
         elif runtime == "python":
             if not data.get("pure", False):
                 capabilities.append(Capability.SIDE_EFFECTING)
@@ -67,12 +70,18 @@ class PluginsAnalyzer(Analyzer):
         elif runtime == "subprocess":
             capabilities.append(Capability.SIDE_EFFECTING)
             side_effects.append(SideEffect(kind=SideEffectKind.SUBPROCESS))
-        if "openai" in (self._http_target(data) or "") or "${env.OPENAI_API_KEY}" in (data.get("config", {}) or {}).get("auth", ""):
+        if "openai" in (self._http_target(data) or "") or "${env.OPENAI_API_KEY}" in (
+            data.get("config", {}) or {}
+        ).get("auth", ""):
             capabilities.append(Capability.LLM_INVOKING)
 
         memory_store = (data.get("config") or {}).get("memory_store")
         if memory_store:
-            capabilities += [Capability.STATEFUL, Capability.MEMORY_READING, Capability.MEMORY_WRITING]
+            capabilities += [
+                Capability.STATEFUL,
+                Capability.MEMORY_READING,
+                Capability.MEMORY_WRITING,
+            ]
 
         inputs = [self._port(p) for p in data.get("inputs", []) or []]
         outputs = [self._port(p) for p in data.get("outputs", []) or []]
