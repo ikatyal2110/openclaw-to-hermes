@@ -2,6 +2,7 @@
 
 Praxis v0.1 does NOT introspect this file — see plugins/ticket_router.yaml.
 """
+
 from __future__ import annotations
 
 from typing import Any

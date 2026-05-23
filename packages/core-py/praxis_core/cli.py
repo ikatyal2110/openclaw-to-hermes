@@ -56,13 +56,57 @@ def scan(
         ..., exists=True, file_okay=False, dir_okay=True, help="Source project root."
     ),
     emit_ir: Path | None = typer.Option(None, "--emit-ir", help="Write the IR JSON to this path."),
+    json_output: bool = typer.Option(
+        False, "--json", help="Print the summary as JSON to stdout (machine-readable)."
+    ),
 ) -> None:
     """Walk the project, build the IR, and print a summary table."""
     ir = build_ir(path)
-    _print_summary(ir)
+    if json_output:
+        summary = {
+            "project": ir.project.model_dump(mode="json") if ir.project else None,
+            "node_count": len(ir.nodes),
+            "edge_count": len(ir.edges),
+            "tier_counts": _tier_counts(ir),
+            "diagnostics": [d.model_dump(mode="json") for d in ir.diagnostics],
+            "nodes": [
+                {
+                    "id": n.id,
+                    "kind": n.kind if isinstance(n.kind, str) else n.kind.value,
+                    "name": n.name,
+                    "tier": (
+                        (
+                            n.portability.tier
+                            if isinstance(n.portability.tier, str)
+                            else n.portability.tier.value
+                        )
+                        if n.portability
+                        else None
+                    ),
+                    "score": n.portability.score if n.portability else None,
+                }
+                for n in ir.nodes
+            ],
+        }
+        typer.echo(json.dumps(summary, indent=2, sort_keys=True))
+    else:
+        _print_summary(ir)
     if emit_ir:
         emit_ir.write_text(ir_to_json(ir), encoding="utf-8")
-        console.print(f"[dim]IR written to {emit_ir}[/dim]")
+        if not json_output:
+            console.print(f"[dim]IR written to {emit_ir}[/dim]")
+
+
+def _tier_counts(ir: IRGraph) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for n in ir.nodes:
+        if not n.portability:
+            continue
+        tier = (
+            n.portability.tier if isinstance(n.portability.tier, str) else n.portability.tier.value
+        )
+        counts[tier] = counts.get(tier, 0) + 1
+    return counts
 
 
 @app.command()
@@ -241,11 +285,113 @@ def skills_extract(
 
 
 @app.command()
+def init(
+    path: Path = typer.Argument(
+        ..., file_okay=False, dir_okay=True, help="Directory to create (must not exist)."
+    ),
+    name: str = typer.Option("my-agent", "--name", help="Project name written into openclaw.yaml."),
+    force: bool = typer.Option(False, "--force", help="Overwrite if the directory exists."),
+) -> None:
+    """Scaffold a starter OpenClaw project so you can experiment without finding a fixture.
+
+    Creates a minimal, valid project: one cron-triggered workflow, two plugins,
+    one prompt, one KV memory store, and a .env.example. After init, `cd` in and
+    run `praxis scan .` to see Praxis pick it up.
+    """
+    if path.exists() and not force:
+        console.print(f"[red]{path} already exists. Use --force to overwrite.[/red]")
+        raise typer.Exit(1)
+    path.mkdir(parents=True, exist_ok=True)
+    for sub in ("workflows", "plugins", "prompts", "memory", "services"):
+        (path / sub).mkdir(exist_ok=True)
+    _write_init_files(path, name)
+    console.print(f"[green]Created starter OpenClaw project at {path}[/green]")
+    console.print("Next:")
+    console.print(f"  cd {path}")
+    console.print("  praxis scan .")
+    console.print("  praxis migrate . --out ./hermes-out")
+
+
+def _write_init_files(root: Path, name: str) -> None:
+    (root / "openclaw.yaml").write_text(
+        f"""name: {name}
+description: "Starter OpenClaw project scaffolded by `praxis init`."
+env:
+  - GREETING_TARGET
+""",
+        encoding="utf-8",
+    )
+    (root / ".env.example").write_text("GREETING_TARGET=world\n", encoding="utf-8")
+    (root / "workflows" / "hello.yaml").write_text(
+        """name: hello
+description: "Says hello on a schedule. Replace with your real workflow."
+triggers:
+  - kind: cron
+    spec: "0 9 * * *"
+steps:
+  - id: build
+    plugin: build_greeting
+    with:
+      target: "${env.GREETING_TARGET}"
+  - id: say
+    plugin: log_message
+    with:
+      message: "${steps.build.output}"
+""",
+        encoding="utf-8",
+    )
+    (root / "plugins" / "build_greeting.yaml").write_text(
+        """name: build_greeting
+description: "Construct a greeting string."
+runtime: python
+pure: true
+inputs:
+  - name: target
+    type: string
+outputs:
+  - name: greeting
+    type: string
+""",
+        encoding="utf-8",
+    )
+    (root / "plugins" / "log_message.yaml").write_text(
+        """name: log_message
+description: "Write a message to stdout. Replace with a real sink."
+runtime: python
+pure: false
+inputs:
+  - name: message
+    type: string
+outputs:
+  - name: ok
+    type: boolean
+""",
+        encoding="utf-8",
+    )
+    (root / "prompts" / "summarize.j2").write_text(
+        "You are a concise summarizer. Summarize the following:\n\n{{ input }}\n",
+        encoding="utf-8",
+    )
+    (root / "memory" / "stores.yaml").write_text(
+        """stores:
+  greeting_log:
+    kind: kv
+    key_type: string
+    value_type: string
+""",
+        encoding="utf-8",
+    )
+
+
+@app.command()
 def explain(
     path: Path = typer.Argument(
         ..., exists=True, file_okay=False, dir_okay=True, help="Source project root."
     ),
     node: str = typer.Argument(..., help="Node ID or name to explain."),
+    json_output: bool = typer.Option(
+        False, "--json", help="Print the node + its in/out edges as JSON (machine-readable)."
+    ),
 ) -> None:
     """Drill into one node — kind, intent, capabilities, side effects, portability, edges.
 
@@ -277,6 +423,18 @@ def explain(
         raise typer.Exit(1)
 
     n = match
+
+    if json_output:
+        in_edges = [e for e in ir.edges if e.to == n.id]
+        out_edges = [e for e in ir.edges if e.from_ == n.id]
+        payload = {
+            "node": n.model_dump(mode="json", by_alias=True),
+            "edges_in": [e.model_dump(mode="json", by_alias=True) for e in in_edges],
+            "edges_out": [e.model_dump(mode="json", by_alias=True) for e in out_edges],
+        }
+        typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+        return
+
     kind = n.kind if isinstance(n.kind, str) else n.kind.value
     console.print(f"[bold]{n.id}[/bold]")
     console.print(f"  kind:        {kind}")

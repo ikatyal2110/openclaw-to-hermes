@@ -4,6 +4,18 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-05-23
+
+### Added
+- **Migration checklist** — `MIGRATION_REPORT.md` now opens with a markdown checkbox playbook. Portable nodes roll up to a single "spot-check these N items" line; partial / needs_review / unsupported each get their own checkbox with the specific blocker inline. Turns the report from a diagnostic into a workflow.
+- **`praxis init <path>`** — scaffolds a starter OpenClaw project (workflow + 2 plugins + prompt + KV memory + .env.example). Lowers first-touch friction; the scaffold scans cleanly with one realistic `needs_review` to demonstrate the classifier.
+- **`praxis scan --json`** — prints `{project, node_count, edge_count, tier_counts, diagnostics, nodes[]}` for programmatic consumers (CI, dashboards).
+- **`praxis explain --json`** — prints the full node (with edges in/out) as JSON.
+
+### Tests
+- 5 new tests covering `init` (creates scannable project, refuses existing dir without `--force`, `--force` overwrites) and `--json` modes on `scan` and `explain`.
+- Total: 125 tests passing.
+
 ## [0.3.0] — 2026-05-23
 
 ### Added
@@ -68,7 +80,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ikatyal2110/openclaw-to-hermes/releases/tag/v0.1.0

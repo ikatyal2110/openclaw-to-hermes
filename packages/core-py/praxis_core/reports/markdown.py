@@ -22,6 +22,7 @@ def render_migration_report(ir: IRGraph) -> str:
         lines.append("")
 
     lines += _summary(ir)
+    lines += _checklist(ir)
     lines += _node_table(ir)
     lines += _todos(ir)
     lines += _env_section(ir)
@@ -51,6 +52,77 @@ def _summary(ir: IRGraph) -> list[str]:
     out.append(f"- Needs review: **{tiers.get(PortabilityTier.NEEDS_REVIEW.value, 0)}**")
     out.append(f"- Unsupported: **{tiers.get(PortabilityTier.UNSUPPORTED.value, 0)}**")
     out.append("")
+    return out
+
+
+def _checklist(ir: IRGraph) -> list[str]:
+    """A real migration playbook. Portable nodes roll up to one "accept all" line
+    (no human work needed); partial / needs_review / unsupported each get their
+    own checkbox with the specific action."""
+    by_tier: dict[str, list[tuple[str, str, list[str]]]] = {
+        PortabilityTier.PORTABLE.value: [],
+        PortabilityTier.PARTIAL.value: [],
+        PortabilityTier.NEEDS_REVIEW.value: [],
+        PortabilityTier.UNSUPPORTED.value: [],
+    }
+    for n in ir.nodes:
+        if not n.portability:
+            continue
+        tier = (
+            n.portability.tier if isinstance(n.portability.tier, str) else n.portability.tier.value
+        )
+        by_tier.setdefault(tier, []).append((_kind(n), n.name, list(n.portability.blockers)))
+
+    total = sum(len(v) for v in by_tier.values())
+    if total == 0:
+        return []
+
+    out = [
+        "## Migration checklist",
+        "",
+        "Walk this top-down. Portable nodes are a quick acceptance; the rest need your judgment.",
+        "",
+    ]
+
+    portable = sorted(by_tier.get(PortabilityTier.PORTABLE.value, []))
+    if portable:
+        out.append(f"### Portable ({len(portable)}) — accept as-is")
+        out.append("")
+        names = ", ".join(f"`{name}`" for _, name, _ in portable)
+        out.append(f"- [ ] Spot-check the auto-generated output for: {names}")
+        out.append("")
+
+    tier_sections: list[tuple[str, str, str]] = [
+        (
+            PortabilityTier.PARTIAL.value,
+            "Partial",
+            "Translated with a documented caveat. Each item below has the caveat inline.",
+        ),
+        (
+            PortabilityTier.NEEDS_REVIEW.value,
+            "Needs review",
+            "Translatable, but a human must decide how. Address blockers before shipping.",
+        ),
+        (
+            PortabilityTier.UNSUPPORTED.value,
+            "Unsupported",
+            "No Hermes primitive. Either rewrite or find an alternative.",
+        ),
+    ]
+    for section_tier, header, hint in tier_sections:
+        nodes = sorted(by_tier.get(section_tier, []))
+        if not nodes:
+            continue
+        out.append(f"### {header} ({len(nodes)})")
+        out.append("")
+        out.append(f"_{hint}_")
+        out.append("")
+        for kind, name, blockers in nodes:
+            out.append(f"- [ ] **`{kind}` `{name}`**")
+            for b in blockers:
+                out.append(f"  - {b}")
+        out.append("")
+
     return out
 
 

@@ -4,6 +4,7 @@ Praxis v0.1 does NOT introspect this file — only the YAML manifest at
 plugins/dedupe_seen.yaml is consumed by the analyzer. This source is here so
 the fixture is runnable end-to-end if/when an OpenClaw runtime is installed.
 """
+
 from __future__ import annotations
 
 from typing import Any

@@ -38,6 +38,57 @@ def test_cli_doctor_passes() -> None:
     assert "IR JSON schema" in result.output
 
 
+def test_cli_init_creates_scannable_project(tmp_path: Path) -> None:
+    target = tmp_path / "init-test"
+    result = runner.invoke(app, ["init", str(target)])
+    assert result.exit_code == 0
+    # Required directories exist
+    for sub in ("workflows", "plugins", "prompts", "memory"):
+        assert (target / sub).is_dir()
+    # openclaw.yaml has the right name
+    body = (target / "openclaw.yaml").read_text()
+    assert "name: my-agent" in body
+    # And the scaffold actually scans cleanly
+    scan = runner.invoke(app, ["scan", str(target)])
+    assert scan.exit_code == 0
+    assert "hello" in scan.output
+    assert "1 error(s)" not in scan.output
+
+
+def test_cli_init_refuses_existing_dir_without_force(tmp_path: Path) -> None:
+    target = tmp_path / "preexisting"
+    target.mkdir()
+    result = runner.invoke(app, ["init", str(target)])
+    assert result.exit_code == 1
+    assert "already exists" in result.output
+
+
+def test_cli_scan_json_output(sample_root: Path) -> None:
+    result = runner.invoke(app, ["scan", str(sample_root), "--json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["node_count"] > 0
+    assert "tier_counts" in payload
+    assert "nodes" in payload and isinstance(payload["nodes"], list)
+
+
+def test_cli_explain_json_output(sample_root: Path) -> None:
+    result = runner.invoke(app, ["explain", str(sample_root), "dedupe_seen", "--json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["node"]["name"] == "dedupe_seen"
+    assert payload["edges_in"]
+    assert payload["edges_out"]
+
+
+def test_cli_init_force_overwrites(tmp_path: Path) -> None:
+    target = tmp_path / "preexisting"
+    target.mkdir()
+    result = runner.invoke(app, ["init", str(target), "--force", "--name", "forced"])
+    assert result.exit_code == 0
+    assert "name: forced" in (target / "openclaw.yaml").read_text()
+
+
 def test_cli_explain_by_name(sample_root: Path) -> None:
     result = runner.invoke(app, ["explain", str(sample_root), "dedupe_seen"])
     assert result.exit_code == 0
