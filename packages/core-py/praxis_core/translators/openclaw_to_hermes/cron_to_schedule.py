@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from praxis_core.ir import IRGraph
-from praxis_core.ir.models import EdgeKind, NodeKind
+from praxis_core.ir.models import EdgeKind, Node, NodeKind
 from praxis_core.translators.openclaw_to_hermes.types import HermesProject, HermesSchedule
 
 
@@ -36,5 +36,5 @@ def _trigger_target(ir: IRGraph, scheduler_id: str) -> str | None:
     return None
 
 
-def _kind(node) -> str:  # noqa: ANN001
+def _kind(node: Node) -> str:
     return node.kind if isinstance(node.kind, str) else node.kind.value

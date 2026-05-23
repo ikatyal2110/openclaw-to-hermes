@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -60,12 +61,12 @@ def emit_hermes_project(project: HermesProject, out_root: Path) -> dict[str, lis
     return written
 
 
-def _dump(obj: dict) -> str:
+def _dump(obj: dict[str, Any]) -> str:
     return yaml.safe_dump(obj, sort_keys=False, default_flow_style=False, width=100)
 
 
-def _skill_dict(s: HermesSkill) -> dict:
-    out: dict = {
+def _skill_dict(s: HermesSkill) -> dict[str, Any]:
+    out: dict[str, Any] = {
         "name": s.name,
         "description": s.description,
     }
@@ -81,7 +82,7 @@ def _skill_dict(s: HermesSkill) -> dict:
     return out
 
 
-def _tool_dict(t: HermesTool) -> dict:
+def _tool_dict(t: HermesTool) -> dict[str, Any]:
     return {
         "name": t.name,
         "description": t.description,
@@ -92,11 +93,11 @@ def _tool_dict(t: HermesTool) -> dict:
     }
 
 
-def _schedule_dict(s: HermesSchedule) -> dict:
+def _schedule_dict(s: HermesSchedule) -> dict[str, Any]:
     return {"cron": s.cron, "invoke_skill": s.invoke_skill}
 
 
-def _memory_dict(m: HermesMemory) -> dict:
-    out: dict = {"name": m.name, "kind": m.kind}
+def _memory_dict(m: HermesMemory) -> dict[str, Any]:
+    out: dict[str, Any] = {"name": m.name, "kind": m.kind}
     out.update(m.fields)
     return out

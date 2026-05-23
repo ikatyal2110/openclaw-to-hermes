@@ -189,7 +189,12 @@ class WorkflowsAnalyzer(Analyzer):
             prev_plugin_id = plugin_id
 
     @staticmethod
-    def _infer_intent(name: str, data: dict, triggers: list, steps: list) -> Intent | None:
+    def _infer_intent(
+        name: str,
+        data: dict[str, Any],
+        triggers: list[dict[str, Any]],
+        steps: list[dict[str, Any]],
+    ) -> Intent | None:
         """Static, rule-based intent. The LLM-assisted pass (v0.2) refines this."""
         evidence: list[str] = []
         bits: list[str] = []

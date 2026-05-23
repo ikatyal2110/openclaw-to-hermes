@@ -5,6 +5,8 @@ Resist LLM-ifying this. Opaque scoring kills the trust this tool depends on.
 
 from __future__ import annotations
 
+from typing import Any
+
 from praxis_core.ir import IRGraph
 from praxis_core.ir.models import (
     Capability,
@@ -55,7 +57,7 @@ def _classify(node: Node) -> Portability:
     )
 
 
-def _classify_workflow(node: Node, meta: dict) -> Portability:
+def _classify_workflow(node: Node, meta: dict[str, Any]) -> Portability:
     blockers: list[str] = []
     if meta.get("has_branches"):
         blockers.append("Conditional branches (`when:` clauses) — split into multiple skills.")
@@ -83,7 +85,7 @@ def _classify_workflow(node: Node, meta: dict) -> Portability:
     )
 
 
-def _classify_tool(node: Node, meta: dict) -> Portability:
+def _classify_tool(node: Node, meta: dict[str, Any]) -> Portability:
     runtime = (meta.get("runtime") or "").lower()
     kind_field = (meta.get("kind") or "").lower()
 
@@ -132,7 +134,7 @@ def _classify_tool(node: Node, meta: dict) -> Portability:
     )
 
 
-def _classify_memory(node: Node, meta: dict) -> Portability:
+def _classify_memory(node: Node, meta: dict[str, Any]) -> Portability:
     spec = meta.get("spec") or {}
     kind = (spec.get("kind") or "").lower()
     if kind == "kv":
@@ -157,7 +159,7 @@ def _classify_memory(node: Node, meta: dict) -> Portability:
     )
 
 
-def _classify_scheduler(node: Node, meta: dict) -> Portability:
+def _classify_scheduler(node: Node, meta: dict[str, Any]) -> Portability:
     if meta.get("trigger_kind") == "cron":
         return Portability(
             score=1.0, tier=PortabilityTier.PORTABLE, rationale="Cron — passes through."

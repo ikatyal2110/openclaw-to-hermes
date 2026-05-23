@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from praxis_core.analyzers.base import Analyzer
 from praxis_core.ir import IRGraph
@@ -11,8 +12,9 @@ from praxis_core.ir import IRGraph
 class ProjectAnalyzer(Analyzer):
     name = "openclaw.project"
 
-    def read(self, root: Path) -> dict | None:
-        return self.safe_load_yaml(root / "openclaw.yaml")  # type: ignore[return-value]
+    def read(self, root: Path) -> dict[str, Any] | None:
+        loaded = self.safe_load_yaml(root / "openclaw.yaml")
+        return loaded if isinstance(loaded, dict) else None
 
     def analyze(self, root: Path) -> IRGraph:
         return IRGraph()

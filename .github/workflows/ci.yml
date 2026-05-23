@@ -37,7 +37,6 @@ jobs:
         run: ruff format --check .
       - name: Typecheck (mypy)
         run: mypy praxis_core
-        continue-on-error: true  # tighten once v0.1 ships; mypy strict has known gaps in plugin land
       - name: Test
         run: pytest -q
 

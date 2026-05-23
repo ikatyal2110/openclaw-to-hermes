@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from praxis_core.ir import IRGraph
-from praxis_core.ir.models import NodeKind, PortabilityTier
+from praxis_core.ir.models import Node, NodeKind, PortabilityTier
 from praxis_core.translators.openclaw_to_hermes.types import HermesProject, HermesTool
 
 
@@ -37,6 +37,6 @@ def translate_tools(ir: IRGraph, project: HermesProject) -> None:
         )
 
 
-def _describe(node, runtime: str) -> str:  # noqa: ANN001
+def _describe(node: Node, runtime: str) -> str:
     rationale = node.portability.rationale if node.portability else ""
     return f"{node.name} ({runtime}) — {rationale}".rstrip(" —")

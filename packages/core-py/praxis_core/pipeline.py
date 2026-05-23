@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from praxis_core.analyzers.openclaw import analyze_openclaw_project
 from praxis_core.emitters import emit_hermes_project
@@ -31,7 +32,7 @@ def ir_to_json(ir: IRGraph) -> str:
     return json.dumps(ir.to_json_dict(), indent=2, sort_keys=True)
 
 
-def migrate(source_root: Path, out_root: Path) -> dict:
+def migrate(source_root: Path, out_root: Path) -> dict[str, Any]:
     """Stages 1–6: build IR, translate to Hermes, emit project + report + graph + ir.json."""
     ir = build_ir(source_root)
     project = translate_openclaw_to_hermes(ir)

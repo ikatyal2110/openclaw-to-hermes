@@ -11,7 +11,7 @@ import re
 from typing import Any
 
 from praxis_core.ir import IRGraph
-from praxis_core.ir.models import NodeKind, PortabilityTier
+from praxis_core.ir.models import Node, NodeKind, PortabilityTier
 from praxis_core.translators.openclaw_to_hermes.types import HermesProject, HermesSkill
 
 ENV_REF = re.compile(r"\$\{env\.([A-Z0-9_]+)\}")
@@ -28,7 +28,7 @@ def translate_skills(ir: IRGraph, project: HermesProject) -> None:
         project.skills.append(skill)
 
 
-def _build_skill(ir: IRGraph, wf) -> HermesSkill:  # noqa: ANN001
+def _build_skill(ir: IRGraph, wf: Node) -> HermesSkill:
     meta = wf.metadata or {}
     raw_steps: list[dict[str, Any]] = meta.get("raw_steps") or []
     triggers: list[dict[str, Any]] = meta.get("triggers") or []
@@ -84,7 +84,9 @@ def _build_skill(ir: IRGraph, wf) -> HermesSkill:  # noqa: ANN001
     )
 
 
-def _derive_when_to_use(name: str, triggers: list, steps: list) -> list[str]:  # noqa: ANN001
+def _derive_when_to_use(
+    name: str, triggers: list[dict[str, Any]], steps: list[dict[str, Any]]
+) -> list[str]:
     out: list[str] = []
     for t in triggers:
         if not isinstance(t, dict):

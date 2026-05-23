@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import Counter
 
 from praxis_core.ir import IRGraph
-from praxis_core.ir.models import NodeKind, PortabilityTier
+from praxis_core.ir.models import Node, NodeKind, PortabilityTier
 
 
 def render_migration_report(ir: IRGraph) -> str:
@@ -33,7 +33,7 @@ def render_migration_report(ir: IRGraph) -> str:
 
 
 def _summary(ir: IRGraph) -> list[str]:
-    tiers = Counter()
+    tiers: Counter[str] = Counter()
     for n in ir.nodes:
         if n.portability:
             tier = (
@@ -134,5 +134,5 @@ def _diagnostics(ir: IRGraph) -> list[str]:
     return out
 
 
-def _kind(n) -> str:  # noqa: ANN001
+def _kind(n: Node) -> str:
     return n.kind if isinstance(n.kind, str) else n.kind.value

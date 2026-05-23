@@ -52,8 +52,8 @@ def render_mermaid_graph(ir: IRGraph) -> str:
     lines.append("")
 
     for edge in ir.edges:
-        kind = edge.kind if isinstance(edge.kind, str) else edge.kind.value
-        style = EDGE_STYLE.get(kind, "-->")
+        edge_kind = edge.kind if isinstance(edge.kind, str) else edge.kind.value
+        style = EDGE_STYLE.get(edge_kind, "-->")
         if _is_env(ir, edge.from_) or _is_env(ir, edge.to):
             continue
         from_id = _safe(edge.from_)

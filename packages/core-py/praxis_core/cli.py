@@ -11,6 +11,7 @@ from rich.table import Table
 
 from praxis_core import IR_VERSION
 from praxis_core.extract import extract_prompt_clusters
+from praxis_core.ir import IRGraph
 from praxis_core.ir.models import NodeKind
 from praxis_core.pipeline import build_ir, ir_to_json, migrate
 from praxis_core.reports import render_extract_report, render_mermaid_graph, render_migration_report
@@ -186,7 +187,7 @@ def skills_extract(
         console.print(f"[dim]Report written to {report}[/dim]")
 
 
-def _print_summary(ir) -> None:  # noqa: ANN001
+def _print_summary(ir: IRGraph) -> None:
     table = Table(title="Praxis scan")
     table.add_column("Kind")
     table.add_column("Name")

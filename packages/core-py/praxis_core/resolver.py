@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from praxis_core.ir import IRGraph
-from praxis_core.ir.models import Diagnostic, Edge
+from praxis_core.ir.models import Diagnostic, Edge, Node
 
 
 def resolve(ir: IRGraph) -> IRGraph:
@@ -18,7 +18,7 @@ def resolve(ir: IRGraph) -> IRGraph:
 def _dedupe_nodes(ir: IRGraph) -> None:
     """If two analyzers emit the same node id, keep the one with the richer payload."""
     by_id: dict[str, int] = {}
-    keep: list = []
+    keep: list[Node] = []
     for node in ir.nodes:
         if node.id in by_id:
             existing = keep[by_id[node.id]]
@@ -30,7 +30,7 @@ def _dedupe_nodes(ir: IRGraph) -> None:
     ir.nodes = keep
 
 
-def _richness(n) -> int:  # noqa: ANN001
+def _richness(n: Node) -> int:
     score = 0
     if n.description:
         score += 1
