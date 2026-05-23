@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussion
+    url: https://github.com/praxis-dev/praxis/discussions
+    about: Open-ended questions about migration strategy, the IR, or extending Praxis.

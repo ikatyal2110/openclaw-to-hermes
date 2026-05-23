@@ -1,0 +1,8 @@
+{
+  "name": "@praxis/bridge",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Placeholder for the hybrid Hermes↔OpenClaw runtime bridge (v0.3+).",
+  "license": "Apache-2.0",
+  "type": "module"
+}

@@ -1,0 +1,2 @@
+cron: 0 9 * * *
+invoke_skill: daily_digest

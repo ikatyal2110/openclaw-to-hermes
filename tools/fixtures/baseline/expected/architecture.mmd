@@ -1,0 +1,64 @@
+flowchart LR
+    classDef portable fill:#d4f7d4,stroke:#1a7f1a
+    classDef partial fill:#fff3c4,stroke:#a87900
+    classDef needsReview fill:#ffd9b3,stroke:#a55a00
+    classDef unsupported fill:#f7c2c2,stroke:#8a1a1a
+
+    memory_store_seen_articles_224b7537[("memory_store: seen_articles")]
+    memory_store_ticket_history_ab3bfe34[("memory_store: ticket_history")]
+    prompt_classify_58b0dd7d>""prompt: classify""]
+    prompt_classify_email_dcb87d2d>""prompt: classify_email""]
+    prompt_extract_entities_c02042f1>""prompt: extract_entities""]
+    prompt_extract_entities_v2_a9cae10a>""prompt: extract_entities_v2""]
+    prompt_summarize_308b46e6>""prompt: summarize""]
+    prompt_summarize_weekly_b92eecf8>""prompt: summarize_weekly""]
+    scheduler_daily_digest__cron_0_a8ea69fb(("scheduler: daily_digest__cron_0"))
+    scheduler_support_triage__webhook_0_aecba949(("scheduler: support_triage__webhook_0"))
+    service_jira_58c6ed2e{{"service: jira"}}
+    service_openai_b65eb310{{"service: openai"}}
+    tool_classify_ticket_a5e277f1[/"tool: classify_ticket"/]
+    tool_dedupe_seen_f7650ecd[/"tool: dedupe_seen"/]
+    tool_fetch_articles_d03c4684[/"tool: fetch_articles"/]
+    tool_llm_summarize_5832eb46[/"tool: llm_summarize"/]
+    tool_slack_post_5821e6e4[/"tool: slack_post"/]
+    tool_ticket_router_056cefb3[/"tool: ticket_router"/]
+    workflow_daily_digest_e88d0b2a["workflow: daily_digest"]
+    workflow_support_triage_f2b1e5a4["workflow: support_triage"]
+
+    prompt_classify_58b0dd7d -.-> tool_classify_ticket_a5e277f1
+    prompt_summarize_308b46e6 -.-> tool_llm_summarize_5832eb46
+    scheduler_daily_digest__cron_0_a8ea69fb ==> workflow_daily_digest_e88d0b2a
+    scheduler_support_triage__webhook_0_aecba949 ==> workflow_support_triage_f2b1e5a4
+    tool_classify_ticket_a5e277f1 -->|data| tool_ticket_router_056cefb3
+    tool_dedupe_seen_f7650ecd -.->|reads| memory_store_seen_articles_224b7537
+    tool_dedupe_seen_f7650ecd -.->|writes| memory_store_seen_articles_224b7537
+    tool_dedupe_seen_f7650ecd -->|data| tool_llm_summarize_5832eb46
+    tool_fetch_articles_d03c4684 -->|data| tool_dedupe_seen_f7650ecd
+    tool_llm_summarize_5832eb46 -->|data| tool_slack_post_5821e6e4
+    workflow_daily_digest_e88d0b2a --> tool_dedupe_seen_f7650ecd
+    workflow_daily_digest_e88d0b2a --> tool_fetch_articles_d03c4684
+    workflow_daily_digest_e88d0b2a --> tool_llm_summarize_5832eb46
+    workflow_daily_digest_e88d0b2a --> tool_slack_post_5821e6e4
+    workflow_support_triage_f2b1e5a4 --> tool_classify_ticket_a5e277f1
+    workflow_support_triage_f2b1e5a4 --> tool_ticket_router_056cefb3
+
+    class memory_store_seen_articles_224b7537 portable
+    class memory_store_ticket_history_ab3bfe34 needsReview
+    class prompt_classify_58b0dd7d portable
+    class prompt_classify_email_dcb87d2d portable
+    class prompt_extract_entities_c02042f1 portable
+    class prompt_extract_entities_v2_a9cae10a portable
+    class prompt_summarize_308b46e6 portable
+    class prompt_summarize_weekly_b92eecf8 portable
+    class scheduler_daily_digest__cron_0_a8ea69fb portable
+    class scheduler_support_triage__webhook_0_aecba949 partial
+    class service_jira_58c6ed2e partial
+    class service_openai_b65eb310 partial
+    class tool_classify_ticket_a5e277f1 portable
+    class tool_dedupe_seen_f7650ecd needsReview
+    class tool_fetch_articles_d03c4684 portable
+    class tool_llm_summarize_5832eb46 portable
+    class tool_slack_post_5821e6e4 portable
+    class tool_ticket_router_056cefb3 partial
+    class workflow_daily_digest_e88d0b2a portable
+    class workflow_support_triage_f2b1e5a4 portable

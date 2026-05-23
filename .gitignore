@@ -1,0 +1,36 @@
+# Node
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.python-version
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Claude Code local state
+.claude/
+
+# Praxis
+.praxis-cache/
+*.ir.json
+out/
+.env
+.env.local
+
+# Test
+.pytest_cache/
+.coverage
+coverage/

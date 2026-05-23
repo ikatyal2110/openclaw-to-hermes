@@ -1,0 +1,19 @@
+name: classify_ticket
+description: "classify_ticket (http) \u2014 HTTP tool \u2014 direct map."
+runtime: http
+spec:
+  method: POST
+  url_template: https://api.openai.com/v1/chat/completions
+  auth: Bearer ${env.OPENAI_API_KEY}
+inputs:
+- name: prompt
+  type: string
+  required: true
+- name: input
+  type: object
+  required: true
+outputs:
+- name: category
+  type: string
+- name: confidence
+  type: number

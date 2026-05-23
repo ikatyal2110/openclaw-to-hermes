@@ -1,0 +1,32 @@
+name: daily_digest
+description: Daily RSS summary posted to Slack.
+when_to_use:
+- 'Scheduled trigger fires (cron: 0 9 * * *)'
+inputs:
+  rss_url:
+    type: string
+    env: RSS_URL
+  slack_channel:
+    type: string
+    env: SLACK_CHANNEL
+procedure:
+- tool: fetch_articles
+  with:
+    source: ${rss_url}
+  as: fetch
+- tool: dedupe_seen
+  with:
+    items: ${fetch}
+  as: dedupe
+- tool: llm_summarize
+  with:
+    prompt: summarize
+    input: ${dedupe}
+  as: summarize
+- tool: slack_post
+  with:
+    channel: ${slack_channel}
+    body: ${summarize}
+  as: notify
+_praxis:
+  confidence: 0.95

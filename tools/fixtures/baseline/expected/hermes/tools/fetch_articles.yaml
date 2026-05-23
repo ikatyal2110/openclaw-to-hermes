@@ -1,0 +1,13 @@
+name: fetch_articles
+description: "fetch_articles (http) \u2014 HTTP tool \u2014 direct map."
+runtime: http
+spec:
+  method: GET
+  url_template: ${source}
+inputs:
+- name: source
+  type: string
+  required: true
+outputs:
+- name: articles
+  type: list<object>

@@ -1,0 +1,24 @@
+name: daily_digest
+description: "Daily RSS summary posted to Slack."
+triggers:
+  - kind: cron
+    spec: "0 9 * * *"
+steps:
+  - id: fetch
+    plugin: fetch_articles
+    with:
+      source: "${env.RSS_URL}"
+  - id: dedupe
+    plugin: dedupe_seen
+    with:
+      items: "${steps.fetch.output}"
+  - id: summarize
+    plugin: llm_summarize
+    with:
+      prompt: summarize
+      input: "${steps.dedupe.output}"
+  - id: notify
+    plugin: slack_post
+    with:
+      channel: "${env.SLACK_CHANNEL}"
+      body: "${steps.summarize.output}"

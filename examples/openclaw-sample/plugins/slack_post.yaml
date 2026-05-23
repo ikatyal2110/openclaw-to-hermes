@@ -1,0 +1,11 @@
+name: slack_post
+kind: sink
+runtime: http
+config:
+  method: POST
+  url_template: "https://slack.com/api/chat.postMessage"
+inputs:
+  - {name: channel, type: string, required: true}
+  - {name: body, type: string, required: true}
+outputs:
+  - {name: ok, type: boolean}

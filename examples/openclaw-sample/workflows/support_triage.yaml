@@ -1,0 +1,16 @@
+name: support_triage
+description: "Classify incoming support tickets and route to the right system."
+triggers:
+  - kind: webhook
+    path: /hooks/support
+steps:
+  - id: classify
+    plugin: classify_ticket
+    with:
+      prompt: classify
+      input: "${trigger.body}"
+  - id: route
+    plugin: ticket_router
+    with:
+      ticket: "${trigger.body}"
+      category: "${steps.classify.output.category}"

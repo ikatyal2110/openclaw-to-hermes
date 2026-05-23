@@ -1,0 +1,7 @@
+services:
+  jira:
+    kind: api
+    base_url: "${env.JIRA_BASE_URL}"
+  openai:
+    kind: api
+    base_url: "https://api.openai.com"

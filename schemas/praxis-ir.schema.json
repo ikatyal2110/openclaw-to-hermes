@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://praxis.dev/schemas/praxis-ir.schema.json",
+  "title": "Praxis IR",
+  "description": "Intermediate representation for agent system architectures. The single public contract of Praxis. Framework-neutral nodes, framework-tagged provenance, capability-based.",
+  "type": "object",
+  "required": ["praxis_ir_version", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "praxis_ir_version": {
+      "type": "string",
+      "const": "0.1",
+      "description": "IR schema version. Breaking changes increment this; consumers must check."
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "source_framework": {"type": "string", "enum": ["openclaw", "hermes", "unknown"]},
+        "source_root": {"type": "string"},
+        "analyzed_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/Node"}
+    },
+    "edges": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/Edge"}
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/Diagnostic"}
+    }
+  },
+
+  "$defs": {
+    "NodeKind": {
+      "type": "string",
+      "enum": [
+        "tool",
+        "skill",
+        "workflow",
+        "prompt",
+        "memory_store",
+        "scheduler",
+        "service",
+        "secret",
+        "env"
+      ]
+    },
+
+    "Capability": {
+      "type": "string",
+      "enum": [
+        "sequenceable",
+        "branchable",
+        "retriable",
+        "scheduled",
+        "stateful",
+        "side_effecting",
+        "llm_invoking",
+        "http_callable",
+        "memory_reading",
+        "memory_writing",
+        "user_facing",
+        "external_dependency"
+      ]
+    },
+
+    "PortSpec": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "type": {"type": "string", "description": "Type tag — language-neutral. e.g., string, number, list<string>, object."},
+        "required": {"type": "boolean", "default": true},
+        "default": {},
+        "env": {"type": "string", "description": "If sourced from an environment variable, its name."},
+        "description": {"type": "string"}
+      }
+    },
+
+    "SideEffect": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["network", "filesystem", "subprocess", "database", "messaging", "secret_access", "unknown"]
+        },
+        "target": {"type": "string"},
+        "description": {"type": "string"}
+      }
+    },
+
+    "Intent": {
+      "type": "object",
+      "required": ["description", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "description": {"type": "string"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "evidence": {"type": "array", "items": {"type": "string"}},
+        "source": {"type": "string", "enum": ["static", "llm", "human"], "default": "static"}
+      }
+    },
+
+    "Provenance": {
+      "type": "object",
+      "required": ["framework"],
+      "additionalProperties": false,
+      "properties": {
+        "framework": {"type": "string"},
+        "source_file": {"type": "string"},
+        "source_span": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start_line": {"type": "integer"},
+            "end_line": {"type": "integer"}
+          }
+        },
+        "original_kind": {"type": "string", "description": "The native node type in the source framework (e.g., 'plugin', 'workflow_step')."}
+      }
+    },
+
+    "Portability": {
+      "type": "object",
+      "required": ["score", "tier"],
+      "additionalProperties": false,
+      "properties": {
+        "score": {"type": "number", "minimum": 0, "maximum": 1},
+        "tier": {
+          "type": "string",
+          "enum": ["portable", "partial", "needs_review", "unsupported"]
+        },
+        "rationale": {"type": "string"},
+        "blockers": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+
+    "Node": {
+      "type": "object",
+      "required": ["id", "kind", "name", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-zA-Z_][a-zA-Z0-9_:.-]*$"},
+        "kind": {"$ref": "#/$defs/NodeKind"},
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "capabilities": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/Capability"},
+          "uniqueItems": true
+        },
+        "inputs": {"type": "array", "items": {"$ref": "#/$defs/PortSpec"}},
+        "outputs": {"type": "array", "items": {"$ref": "#/$defs/PortSpec"}},
+        "side_effects": {"type": "array", "items": {"$ref": "#/$defs/SideEffect"}},
+        "intent": {"$ref": "#/$defs/Intent"},
+        "provenance": {"$ref": "#/$defs/Provenance"},
+        "portability": {"$ref": "#/$defs/Portability"},
+        "metadata": {"type": "object", "additionalProperties": true}
+      }
+    },
+
+    "Edge": {
+      "type": "object",
+      "required": ["from", "to", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "from": {"type": "string"},
+        "to": {"type": "string"},
+        "kind": {
+          "type": "string",
+          "enum": ["data", "control", "dependency", "trigger", "reads", "writes"]
+        },
+        "condition": {"type": "string"},
+        "label": {"type": "string"}
+      }
+    },
+
+    "Diagnostic": {
+      "type": "object",
+      "required": ["level", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "level": {"type": "string", "enum": ["info", "warn", "error"]},
+        "message": {"type": "string"},
+        "node_id": {"type": "string"},
+        "code": {"type": "string", "description": "Stable diagnostic code, e.g. 'PRX001'. Lets users filter and CI grep."},
+        "hint": {"type": "string"}
+      }
+    }
+  }
+}

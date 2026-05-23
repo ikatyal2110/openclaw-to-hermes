@@ -1,0 +1,10 @@
+name: fetch_articles
+kind: tool
+runtime: http
+config:
+  method: GET
+  url_template: "${source}"
+inputs:
+  - {name: source, type: string, required: true}
+outputs:
+  - {name: articles, type: list<object>}

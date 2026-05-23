@@ -1,0 +1,50 @@
+name: Praxis ate my workflow
+description: A real OpenClaw project that fails to analyze, classify, or migrate cleanly. Becomes a public regression fixture.
+labels: ["bug", "fixture-candidate"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. These issues become the fixtures in `tools/fixtures/`,
+        so the more reproducible you make it, the more durable the fix.
+  - type: input
+    id: praxis_version
+    attributes:
+      label: Praxis version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Pipeline stage where it fails
+      options:
+        - scan
+        - graph
+        - report
+        - migrate
+        - ir validate
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Minimal OpenClaw input
+      description: Paste the smallest project (or relevant YAML files) that reproduces the issue. Strip secrets.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected on the Hermes side
+      description: One paragraph is enough. We'll convert it into a golden fixture.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What Praxis produced
+      description: Stack trace, generated YAML, or the report — whichever shows the failure.
+      render: shell

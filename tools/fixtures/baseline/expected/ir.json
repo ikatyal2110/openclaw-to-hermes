@@ -1,0 +1,1017 @@
+{
+  "diagnostics": [],
+  "edges": [
+    {
+      "from": "env.OPENAI_API_KEY.3568a92b",
+      "kind": "dependency",
+      "label": "env:OPENAI_API_KEY",
+      "to": "tool.classify_ticket.a5e277f1"
+    },
+    {
+      "from": "env.OPENAI_API_KEY.3568a92b",
+      "kind": "dependency",
+      "label": "env:OPENAI_API_KEY",
+      "to": "tool.llm_summarize.5832eb46"
+    },
+    {
+      "from": "env.RSS_URL.839522ab",
+      "kind": "dependency",
+      "label": "env:RSS_URL",
+      "to": "tool.fetch_articles.d03c4684"
+    },
+    {
+      "from": "env.SLACK_CHANNEL.0d9ee935",
+      "kind": "dependency",
+      "label": "env:SLACK_CHANNEL",
+      "to": "tool.slack_post.5821e6e4"
+    },
+    {
+      "from": "prompt.classify.58b0dd7d",
+      "kind": "dependency",
+      "label": "prompt:classify",
+      "to": "tool.classify_ticket.a5e277f1"
+    },
+    {
+      "from": "prompt.summarize.308b46e6",
+      "kind": "dependency",
+      "label": "prompt:summarize",
+      "to": "tool.llm_summarize.5832eb46"
+    },
+    {
+      "from": "scheduler.daily_digest__cron_0.a8ea69fb",
+      "kind": "trigger",
+      "label": "0 9 * * *",
+      "to": "workflow.daily_digest.e88d0b2a"
+    },
+    {
+      "from": "scheduler.support_triage__webhook_0.aecba949",
+      "kind": "trigger",
+      "label": "/hooks/support",
+      "to": "workflow.support_triage.f2b1e5a4"
+    },
+    {
+      "from": "tool.classify_ticket.a5e277f1",
+      "kind": "data",
+      "to": "tool.ticket_router.056cefb3"
+    },
+    {
+      "from": "tool.dedupe_seen.f7650ecd",
+      "kind": "reads",
+      "label": "seen_articles",
+      "to": "memory_store.seen_articles.224b7537"
+    },
+    {
+      "from": "tool.dedupe_seen.f7650ecd",
+      "kind": "writes",
+      "label": "seen_articles",
+      "to": "memory_store.seen_articles.224b7537"
+    },
+    {
+      "from": "tool.dedupe_seen.f7650ecd",
+      "kind": "data",
+      "to": "tool.llm_summarize.5832eb46"
+    },
+    {
+      "from": "tool.fetch_articles.d03c4684",
+      "kind": "data",
+      "to": "tool.dedupe_seen.f7650ecd"
+    },
+    {
+      "from": "tool.llm_summarize.5832eb46",
+      "kind": "data",
+      "to": "tool.slack_post.5821e6e4"
+    },
+    {
+      "from": "workflow.daily_digest.e88d0b2a",
+      "kind": "control",
+      "label": "dedupe",
+      "to": "tool.dedupe_seen.f7650ecd"
+    },
+    {
+      "from": "workflow.daily_digest.e88d0b2a",
+      "kind": "control",
+      "label": "fetch",
+      "to": "tool.fetch_articles.d03c4684"
+    },
+    {
+      "from": "workflow.daily_digest.e88d0b2a",
+      "kind": "control",
+      "label": "summarize",
+      "to": "tool.llm_summarize.5832eb46"
+    },
+    {
+      "from": "workflow.daily_digest.e88d0b2a",
+      "kind": "control",
+      "label": "notify",
+      "to": "tool.slack_post.5821e6e4"
+    },
+    {
+      "from": "workflow.support_triage.f2b1e5a4",
+      "kind": "control",
+      "label": "classify",
+      "to": "tool.classify_ticket.a5e277f1"
+    },
+    {
+      "from": "workflow.support_triage.f2b1e5a4",
+      "kind": "control",
+      "label": "route",
+      "to": "tool.ticket_router.056cefb3"
+    }
+  ],
+  "nodes": [
+    {
+      "capabilities": [],
+      "id": "env.JIRA_BASE_URL.effd37f7",
+      "inputs": [],
+      "kind": "env",
+      "metadata": {},
+      "name": "JIRA_BASE_URL",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Environment variable, passed through.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "env",
+        "source_file": ".env.example"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "id": "env.JIRA_TOKEN.6f2276f7",
+      "inputs": [],
+      "kind": "env",
+      "metadata": {},
+      "name": "JIRA_TOKEN",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Environment variable, passed through.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "env",
+        "source_file": ".env.example"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "id": "env.OPENAI_API_KEY.3568a92b",
+      "inputs": [],
+      "kind": "env",
+      "metadata": {},
+      "name": "OPENAI_API_KEY",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Environment variable, passed through.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "env",
+        "source_file": ".env.example"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "id": "env.RSS_URL.839522ab",
+      "inputs": [],
+      "kind": "env",
+      "metadata": {},
+      "name": "RSS_URL",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Environment variable, passed through.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "env",
+        "source_file": ".env.example"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "id": "env.SLACK_CHANNEL.0d9ee935",
+      "inputs": [],
+      "kind": "env",
+      "metadata": {},
+      "name": "SLACK_CHANNEL",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Environment variable, passed through.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "env",
+        "source_file": ".env.example"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "stateful"
+      ],
+      "id": "memory_store.seen_articles.224b7537",
+      "inputs": [],
+      "kind": "memory_store",
+      "metadata": {
+        "spec": {
+          "key_type": "string",
+          "kind": "kv",
+          "ttl_seconds": 604800,
+          "value_type": "object"
+        }
+      },
+      "name": "seen_articles",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "KV store \u2014 direct map.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "memory_store/kv",
+        "source_file": "memory/stores.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "stateful"
+      ],
+      "id": "memory_store.ticket_history.ab3bfe34",
+      "inputs": [],
+      "kind": "memory_store",
+      "metadata": {
+        "spec": {
+          "dim": 1536,
+          "kind": "vector",
+          "metric": "cosine"
+        }
+      },
+      "name": "ticket_history",
+      "outputs": [],
+      "portability": {
+        "blockers": [
+          "Which embedding model produced these vectors?"
+        ],
+        "rationale": "Vector store \u2014 embedding model not declared in source; specify on the Hermes side.",
+        "score": 0.6,
+        "tier": "needs_review"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "memory_store/vector",
+        "source_file": "memory/stores.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "description": "You are a triage classifier. Given the following support ticket, return a",
+      "id": "prompt.classify.58b0dd7d",
+      "inputs": [],
+      "kind": "prompt",
+      "metadata": {
+        "body": "You are a triage classifier. Given the following support ticket, return a\nJSON object with fields:\n\n- category: one of \"bug\", \"billing\", \"feedback\"\n- confidence: a number between 0 and 1\n\nTicket:\n{{ input }}\n",
+        "format": "j2"
+      },
+      "name": "classify",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Prompt copied verbatim.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "prompt_template",
+        "source_file": "prompts/classify.j2"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "description": "You are a triage classifier. Given the following inbound email, return a",
+      "id": "prompt.classify_email.dcb87d2d",
+      "inputs": [],
+      "kind": "prompt",
+      "metadata": {
+        "body": "You are a triage classifier. Given the following inbound email, return a\nJSON object with fields:\n\n- category: one of \"sales\", \"support\", \"spam\"\n- confidence: a number between 0 and 1\n\nEmail:\n{{ input }}\n",
+        "format": "j2"
+      },
+      "name": "classify_email",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Prompt copied verbatim.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "prompt_template",
+        "source_file": "prompts/classify_email.j2"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "description": "You are an information extractor. Given the following text, return a JSON",
+      "id": "prompt.extract_entities.c02042f1",
+      "inputs": [],
+      "kind": "prompt",
+      "metadata": {
+        "body": "You are an information extractor. Given the following text, return a JSON\nlist of named entities. Each entry must include:\n\n- text: the surface form\n- type: one of \"person\", \"org\", \"location\"\n- offset: the character offset in the input\n\nText:\n{{ input }}\n",
+        "format": "j2"
+      },
+      "name": "extract_entities",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Prompt copied verbatim.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "prompt_template",
+        "source_file": "prompts/extract_entities.j2"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "description": "You are an information extractor. Given the following text, return a JSON",
+      "id": "prompt.extract_entities_v2.a9cae10a",
+      "inputs": [],
+      "kind": "prompt",
+      "metadata": {
+        "body": "You are an information extractor. Given the following text, return a JSON\nlist of named entities. Each entry must include:\n\n- text: the surface form\n- type: one of \"person\", \"org\", \"location\"\n- span: the character offset in the input\n\nText:\n{{ input }}\n",
+        "format": "j2"
+      },
+      "name": "extract_entities_v2",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Prompt copied verbatim.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "prompt_template",
+        "source_file": "prompts/extract_entities_v2.j2"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "description": "You are a concise news editor. Given the following articles, produce a single",
+      "id": "prompt.summarize.308b46e6",
+      "inputs": [],
+      "kind": "prompt",
+      "metadata": {
+        "body": "You are a concise news editor. Given the following articles, produce a single\ndigest of at most 8 bullet points. Each bullet must be one sentence and lead\nwith the source.\n\nArticles:\n{{ input }}\n",
+        "format": "j2"
+      },
+      "name": "summarize",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Prompt copied verbatim.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "prompt_template",
+        "source_file": "prompts/summarize.j2"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "description": "You are a concise news editor. Given the following articles, produce a weekly",
+      "id": "prompt.summarize_weekly.b92eecf8",
+      "inputs": [],
+      "kind": "prompt",
+      "metadata": {
+        "body": "You are a concise news editor. Given the following articles, produce a weekly\ndigest of at most 12 bullet points. Each bullet must be one sentence and lead\nwith the source. Group bullets by theme where possible.\n\nArticles:\n{{ input }}\n",
+        "format": "j2"
+      },
+      "name": "summarize_weekly",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Prompt copied verbatim.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "prompt_template",
+        "source_file": "prompts/summarize_weekly.j2"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "scheduled"
+      ],
+      "id": "scheduler.daily_digest__cron_0.a8ea69fb",
+      "inputs": [],
+      "kind": "scheduler",
+      "metadata": {
+        "spec": "0 9 * * *",
+        "trigger_kind": "cron"
+      },
+      "name": "daily_digest__cron_0",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Cron \u2014 passes through.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "trigger/cron",
+        "source_file": "workflows/daily_digest.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "user_facing"
+      ],
+      "id": "scheduler.support_triage__webhook_0.aecba949",
+      "inputs": [],
+      "kind": "scheduler",
+      "metadata": {
+        "path": "/hooks/support",
+        "trigger_kind": "webhook"
+      },
+      "name": "support_triage__webhook_0",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Webhook \u2014 Hermes side must wire its own HTTP listener; surfaced as a skill, not a schedule.",
+        "score": 0.5,
+        "tier": "partial"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "trigger/webhook",
+        "source_file": "workflows/support_triage.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "external_dependency"
+      ],
+      "id": "service.jira.58c6ed2e",
+      "inputs": [],
+      "kind": "service",
+      "metadata": {
+        "spec": {
+          "base_url": "${env.JIRA_BASE_URL}",
+          "kind": "api"
+        }
+      },
+      "name": "jira",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Surfaced in report; Hermes side declares its own services.",
+        "score": 0.5,
+        "tier": "partial"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "service/api",
+        "source_file": "services/services.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "external_dependency"
+      ],
+      "id": "service.openai.b65eb310",
+      "inputs": [],
+      "kind": "service",
+      "metadata": {
+        "spec": {
+          "base_url": "https://api.openai.com",
+          "kind": "api"
+        }
+      },
+      "name": "openai",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Surfaced in report; Hermes side declares its own services.",
+        "score": 0.5,
+        "tier": "partial"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "service/api",
+        "source_file": "services/services.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "http_callable",
+        "side_effecting",
+        "llm_invoking"
+      ],
+      "id": "tool.classify_ticket.a5e277f1",
+      "inputs": [
+        {
+          "name": "prompt",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "input",
+          "required": true,
+          "type": "object"
+        }
+      ],
+      "kind": "tool",
+      "metadata": {
+        "config": {
+          "auth": "Bearer ${env.OPENAI_API_KEY}",
+          "method": "POST",
+          "url_template": "https://api.openai.com/v1/chat/completions"
+        },
+        "kind": "tool",
+        "pure": null,
+        "runtime": "http"
+      },
+      "name": "classify_ticket",
+      "outputs": [
+        {
+          "name": "category",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "confidence",
+          "required": true,
+          "type": "number"
+        }
+      ],
+      "portability": {
+        "blockers": [],
+        "rationale": "HTTP tool \u2014 direct map.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "plugin/tool",
+        "source_file": "plugins/classify_ticket.yaml"
+      },
+      "side_effects": [
+        {
+          "kind": "network",
+          "target": "https://api.openai.com/v1/chat/completions"
+        }
+      ]
+    },
+    {
+      "capabilities": [
+        "side_effecting",
+        "stateful",
+        "memory_reading",
+        "memory_writing"
+      ],
+      "id": "tool.dedupe_seen.f7650ecd",
+      "inputs": [
+        {
+          "name": "items",
+          "required": true,
+          "type": "list<object>"
+        }
+      ],
+      "kind": "tool",
+      "metadata": {
+        "config": {
+          "entrypoint": "plugins.dedupe_seen:run",
+          "memory_store": "seen_articles"
+        },
+        "kind": "tool",
+        "pure": false,
+        "runtime": "python"
+      },
+      "name": "dedupe_seen",
+      "outputs": [
+        {
+          "name": "items",
+          "required": true,
+          "type": "list<object>"
+        }
+      ],
+      "portability": {
+        "blockers": [
+          "Confirm side-effect surface; either declare `pure: true` or wrap as HTTP."
+        ],
+        "rationale": "Impure Python plugin \u2014 review side effects before porting.",
+        "score": 0.4,
+        "tier": "needs_review"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "plugin/tool",
+        "source_file": "plugins/dedupe_seen.yaml"
+      },
+      "side_effects": [
+        {
+          "kind": "unknown"
+        }
+      ]
+    },
+    {
+      "capabilities": [
+        "http_callable",
+        "side_effecting"
+      ],
+      "id": "tool.fetch_articles.d03c4684",
+      "inputs": [
+        {
+          "name": "source",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "kind": "tool",
+      "metadata": {
+        "config": {
+          "method": "GET",
+          "url_template": "${source}"
+        },
+        "kind": "tool",
+        "pure": null,
+        "runtime": "http"
+      },
+      "name": "fetch_articles",
+      "outputs": [
+        {
+          "name": "articles",
+          "required": true,
+          "type": "list<object>"
+        }
+      ],
+      "portability": {
+        "blockers": [],
+        "rationale": "HTTP tool \u2014 direct map.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "plugin/tool",
+        "source_file": "plugins/fetch_articles.yaml"
+      },
+      "side_effects": [
+        {
+          "kind": "network",
+          "target": "${source}"
+        }
+      ]
+    },
+    {
+      "capabilities": [
+        "http_callable",
+        "side_effecting",
+        "llm_invoking"
+      ],
+      "id": "tool.llm_summarize.5832eb46",
+      "inputs": [
+        {
+          "name": "prompt",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "input",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "kind": "tool",
+      "metadata": {
+        "config": {
+          "auth": "Bearer ${env.OPENAI_API_KEY}",
+          "method": "POST",
+          "url_template": "https://api.openai.com/v1/chat/completions"
+        },
+        "kind": "tool",
+        "pure": null,
+        "runtime": "http"
+      },
+      "name": "llm_summarize",
+      "outputs": [
+        {
+          "name": "text",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "portability": {
+        "blockers": [],
+        "rationale": "HTTP tool \u2014 direct map.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "plugin/tool",
+        "source_file": "plugins/llm_summarize.yaml"
+      },
+      "side_effects": [
+        {
+          "kind": "network",
+          "target": "https://api.openai.com/v1/chat/completions"
+        }
+      ]
+    },
+    {
+      "capabilities": [
+        "http_callable",
+        "side_effecting"
+      ],
+      "id": "tool.slack_post.5821e6e4",
+      "inputs": [
+        {
+          "name": "channel",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "kind": "tool",
+      "metadata": {
+        "config": {
+          "method": "POST",
+          "url_template": "https://slack.com/api/chat.postMessage"
+        },
+        "kind": "sink",
+        "pure": null,
+        "runtime": "http"
+      },
+      "name": "slack_post",
+      "outputs": [
+        {
+          "name": "ok",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "portability": {
+        "blockers": [],
+        "rationale": "HTTP tool \u2014 direct map.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "plugin/sink",
+        "source_file": "plugins/slack_post.yaml"
+      },
+      "side_effects": [
+        {
+          "kind": "network",
+          "target": "https://slack.com/api/chat.postMessage"
+        }
+      ]
+    },
+    {
+      "capabilities": [
+        "side_effecting"
+      ],
+      "id": "tool.ticket_router.056cefb3",
+      "inputs": [
+        {
+          "name": "ticket",
+          "required": true,
+          "type": "object"
+        },
+        {
+          "name": "category",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "kind": "tool",
+      "metadata": {
+        "config": {
+          "entrypoint": "plugins.ticket_router:route",
+          "routes": {
+            "billing": "stripe_dispute_open",
+            "bug": "jira_create",
+            "feedback": "slack_post"
+          }
+        },
+        "kind": "router",
+        "pure": false,
+        "runtime": "python"
+      },
+      "name": "ticket_router",
+      "outputs": [
+        {
+          "name": "ok",
+          "required": true,
+          "type": "boolean"
+        }
+      ],
+      "portability": {
+        "blockers": [
+          "Router has no one-to-one Hermes mapping; review the generated skill's `when_to_use`."
+        ],
+        "rationale": "Router plugin \u2014 collapse into autonomous decomposition on the Hermes side.",
+        "score": 0.5,
+        "tier": "partial"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "plugin/router",
+        "source_file": "plugins/ticket_router.yaml"
+      },
+      "side_effects": [
+        {
+          "kind": "unknown"
+        }
+      ]
+    },
+    {
+      "capabilities": [
+        "sequenceable",
+        "side_effecting",
+        "scheduled"
+      ],
+      "description": "Daily RSS summary posted to Slack.",
+      "id": "workflow.daily_digest.e88d0b2a",
+      "inputs": [],
+      "intent": {
+        "confidence": 0.95,
+        "description": "Daily RSS summary posted to Slack.",
+        "evidence": [
+          "description field present"
+        ],
+        "source": "static"
+      },
+      "kind": "workflow",
+      "metadata": {
+        "has_branches": false,
+        "raw_steps": [
+          {
+            "id": "fetch",
+            "plugin": "fetch_articles",
+            "with": {
+              "source": "${env.RSS_URL}"
+            }
+          },
+          {
+            "id": "dedupe",
+            "plugin": "dedupe_seen",
+            "with": {
+              "items": "${steps.fetch.output}"
+            }
+          },
+          {
+            "id": "summarize",
+            "plugin": "llm_summarize",
+            "with": {
+              "input": "${steps.dedupe.output}",
+              "prompt": "summarize"
+            }
+          },
+          {
+            "id": "notify",
+            "plugin": "slack_post",
+            "with": {
+              "body": "${steps.summarize.output}",
+              "channel": "${env.SLACK_CHANNEL}"
+            }
+          }
+        ],
+        "triggers": [
+          {
+            "kind": "cron",
+            "spec": "0 9 * * *"
+          }
+        ]
+      },
+      "name": "daily_digest",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Linear sequenceable workflow.",
+        "score": 0.95,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "workflow",
+        "source_file": "workflows/daily_digest.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "sequenceable",
+        "side_effecting"
+      ],
+      "description": "Classify incoming support tickets and route to the right system.",
+      "id": "workflow.support_triage.f2b1e5a4",
+      "inputs": [],
+      "intent": {
+        "confidence": 0.95,
+        "description": "Classify incoming support tickets and route to the right system.",
+        "evidence": [
+          "description field present"
+        ],
+        "source": "static"
+      },
+      "kind": "workflow",
+      "metadata": {
+        "has_branches": false,
+        "raw_steps": [
+          {
+            "id": "classify",
+            "plugin": "classify_ticket",
+            "with": {
+              "input": "${trigger.body}",
+              "prompt": "classify"
+            }
+          },
+          {
+            "id": "route",
+            "plugin": "ticket_router",
+            "with": {
+              "category": "${steps.classify.output.category}",
+              "ticket": "${trigger.body}"
+            }
+          }
+        ],
+        "triggers": [
+          {
+            "kind": "webhook",
+            "path": "/hooks/support"
+          }
+        ]
+      },
+      "name": "support_triage",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Linear sequenceable workflow.",
+        "score": 0.95,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "workflow",
+        "source_file": "workflows/support_triage.yaml"
+      },
+      "side_effects": []
+    }
+  ],
+  "praxis_ir_version": "0.1",
+  "project": {
+    "analyzed_at": "NORMALIZED",
+    "name": "example-agent-stack",
+    "source_framework": "openclaw",
+    "source_root": "NORMALIZED"
+  }
+}

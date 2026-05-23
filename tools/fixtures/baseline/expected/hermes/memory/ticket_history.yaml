@@ -1,0 +1,4 @@
+name: ticket_history
+kind: vector
+dim: 1536
+metric: cosine

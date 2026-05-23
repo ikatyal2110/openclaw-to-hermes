@@ -1,0 +1,20 @@
+name: ticket_router
+description: "ticket_router (python) \u2014 Router plugin \u2014 collapse into autonomous decomposition\
+  \ on the Hermes side."
+runtime: python
+spec:
+  entrypoint: plugins.ticket_router:route
+  routes:
+    bug: jira_create
+    billing: stripe_dispute_open
+    feedback: slack_post
+inputs:
+- name: ticket
+  type: object
+  required: true
+- name: category
+  type: string
+  required: true
+outputs:
+- name: ok
+  type: boolean

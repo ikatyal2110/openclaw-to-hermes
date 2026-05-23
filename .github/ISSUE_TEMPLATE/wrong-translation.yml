@@ -1,0 +1,58 @@
+name: This translation is wrong
+description: Praxis produced something structurally valid but semantically incorrect. Tell us which tier the node should be in.
+labels: ["translation", "semantic"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Translation correctness is the whole game. Be specific: which IR node,
+        which emitted file, which line in the report.
+  - type: input
+    id: praxis_version
+    attributes:
+      label: Praxis version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: ir_node
+    attributes:
+      label: The IR node
+      description: Paste the relevant entry from `ir.json` (or its source node id).
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: emitted
+    attributes:
+      label: What Praxis emitted
+      description: Paste the offending YAML / report excerpt.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What it should have been
+      description: Either the corrected output or a clear specification.
+    validations:
+      required: true
+  - type: dropdown
+    id: tier
+    attributes:
+      label: What tier should this node be in?
+      options:
+        - portable
+        - partial
+        - needs_review
+        - unsupported
+      multiple: false
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this tier?
+      description: One paragraph. The justification matters more than the verdict.
+    validations:
+      required: true

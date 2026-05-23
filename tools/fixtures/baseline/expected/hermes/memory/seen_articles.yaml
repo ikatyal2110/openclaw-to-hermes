@@ -1,0 +1,5 @@
+name: seen_articles
+kind: kv
+key_type: string
+value_type: object
+ttl_seconds: 604800

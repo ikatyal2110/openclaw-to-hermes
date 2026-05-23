@@ -1,0 +1,12 @@
+name: llm_summarize
+kind: tool
+runtime: http
+config:
+  method: POST
+  url_template: "https://api.openai.com/v1/chat/completions"
+  auth: "Bearer ${env.OPENAI_API_KEY}"
+inputs:
+  - {name: prompt, type: string, required: true}
+  - {name: input, type: string, required: true}
+outputs:
+  - {name: text, type: string}

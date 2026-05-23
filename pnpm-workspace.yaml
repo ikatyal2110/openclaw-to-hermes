@@ -1,0 +1,4 @@
+packages:
+  - "packages/ir"
+  - "packages/cli"
+  - "packages/bridge"

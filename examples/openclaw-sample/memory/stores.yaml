@@ -1,0 +1,10 @@
+stores:
+  seen_articles:
+    kind: kv
+    key_type: string
+    value_type: object
+    ttl_seconds: 604800
+  ticket_history:
+    kind: vector
+    dim: 1536
+    metric: cosine

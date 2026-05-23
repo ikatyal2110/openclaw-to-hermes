@@ -1,0 +1,33 @@
+from praxis_core.ir.models import (
+    Capability,
+    Diagnostic,
+    Edge,
+    EdgeKind,
+    IRGraph,
+    Intent,
+    Node,
+    NodeKind,
+    PortSpec,
+    Portability,
+    PortabilityTier,
+    Provenance,
+    SideEffect,
+    SideEffectKind,
+)
+
+__all__ = [
+    "Capability",
+    "Diagnostic",
+    "Edge",
+    "EdgeKind",
+    "IRGraph",
+    "Intent",
+    "Node",
+    "NodeKind",
+    "PortSpec",
+    "Portability",
+    "PortabilityTier",
+    "Provenance",
+    "SideEffect",
+    "SideEffectKind",
+]

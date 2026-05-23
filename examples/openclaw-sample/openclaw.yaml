@@ -1,0 +1,12 @@
+name: example-agent-stack
+version: 0.3.1
+description: |
+  Two-workflow OpenClaw project used as a fixture for Praxis migration.
+  Demonstrates: cron-triggered chain, router plugin, vector memory,
+  webhook trigger, and an HTTP-runtime plugin set.
+env:
+  - RSS_URL
+  - SLACK_CHANNEL
+  - OPENAI_API_KEY
+  - JIRA_BASE_URL
+  - JIRA_TOKEN

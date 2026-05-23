@@ -1,0 +1,12 @@
+name: dedupe_seen
+description: "dedupe_seen (python) \u2014 Impure Python plugin \u2014 review side effects before porting."
+runtime: python
+spec:
+  entrypoint: plugins.dedupe_seen:run
+inputs:
+- name: items
+  type: list<object>
+  required: true
+outputs:
+- name: items
+  type: list<object>

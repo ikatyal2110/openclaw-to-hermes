@@ -1,0 +1,16 @@
+{
+  "name": "praxis-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Praxis monorepo root — TypeScript packages (ir, cli) sit beside the Python core (packages/core-py).",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

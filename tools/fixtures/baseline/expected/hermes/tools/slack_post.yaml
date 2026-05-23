@@ -1,0 +1,16 @@
+name: slack_post
+description: "slack_post (http) \u2014 HTTP tool \u2014 direct map."
+runtime: http
+spec:
+  method: POST
+  url_template: https://slack.com/api/chat.postMessage
+inputs:
+- name: channel
+  type: string
+  required: true
+- name: body
+  type: string
+  required: true
+outputs:
+- name: ok
+  type: boolean

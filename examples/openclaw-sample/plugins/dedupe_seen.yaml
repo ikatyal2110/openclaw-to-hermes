@@ -1,0 +1,11 @@
+name: dedupe_seen
+kind: tool
+runtime: python
+pure: false
+config:
+  entrypoint: "plugins.dedupe_seen:run"
+  memory_store: seen_articles
+inputs:
+  - {name: items, type: list<object>, required: true}
+outputs:
+  - {name: items, type: list<object>}
