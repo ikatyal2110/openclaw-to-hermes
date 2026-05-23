@@ -7,11 +7,15 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 ## [0.2.0] — 2026-05-23
 
 ### Added
-- **`praxis skills extract`** — clusters prompts by token-bigram Jaccard similarity (single-link, configurable threshold) and emits a Markdown report with tiered suggestions (loose family ≥ threshold / strong overlap ≥ 0.60 / near-duplicate ≥ 0.85). Pure rule-based, no LLM. See [`docs/skills-extract.md`](docs/skills-extract.md).
+- **`praxis skills extract`** — surfaces two kinds of candidate skill consolidations:
+  - **Prompt clusters**: token-bigram Jaccard similarity (single-link, configurable threshold) with tiered suggestions (loose family ≥ threshold / strong overlap ≥ 0.60 / near-duplicate ≥ 0.85).
+  - **Repeated tool sequences**: maximal tool chains (length ≥ 2) that appear in ≥ 2 workflows, found via subsequence tally + maximality filter.
+  - Pure rule-based, no LLM. See [`docs/skills-extract.md`](docs/skills-extract.md).
 - **`praxis doctor`** — sanity checks the local install: praxis import, IR schema discoverability, required dependencies, baseline fixture readability.
 - **`praxis --version`** — prints CLI version and IR schema version.
 - **Golden-file regression suite** under `tools/fixtures/baseline/` — locks the full migration output (`ir.json` + `architecture.mmd` + `hermes/` tree) of the baseline fixture. Diffs against live output on every `pytest` run.
 - **Three demo prompt families** in `examples/openclaw-sample/prompts/` — `summarize_weekly.j2` and `classify_email.j2` (cluster with their originals at 0.6 and 0.5 respectively) and `extract_entities.j2`/`extract_entities_v2.j2` (cluster at 0.90) — exercise all three suggestion tiers.
+- **`weekly_digest` workflow** in the fixture — shares the full 4-tool chain (`fetch_articles → dedupe_seen → llm_summarize → slack_post`) with `daily_digest` to demonstrate sequence repetition detection.
 - **`CHANGELOG.md`** and `docs/skills-extract.md` user guide.
 
 ### Changed

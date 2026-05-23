@@ -12,7 +12,7 @@ def test_translator_produces_one_skill_per_workflow(sample_root: Path) -> None:
     ir = build_ir(sample_root)
     project = translate_openclaw_to_hermes(ir)
     skill_names = sorted(s.name for s in project.skills)
-    assert skill_names == ["daily_digest", "support_triage"]
+    assert skill_names == ["daily_digest", "support_triage", "weekly_digest"]
 
 
 def test_translator_emits_tools_for_each_plugin(sample_root: Path) -> None:

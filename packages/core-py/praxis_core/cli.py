@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.table import Table
 
 from praxis_core import IR_VERSION, __version__
-from praxis_core.extract import extract_prompt_clusters
+from praxis_core.extract import extract_prompt_clusters, extract_repeated_sequences
 from praxis_core.ir import IRGraph
 from praxis_core.ir.models import NodeKind
 from praxis_core.pipeline import build_ir, ir_to_json, migrate
@@ -174,35 +174,68 @@ def skills_extract(
         None, "--report", help="Write a Markdown report to this path."
     ),
 ) -> None:
-    """Cluster prompts by structural similarity; surface candidate skill extractions."""
+    """Cluster prompts by structural similarity AND find repeated tool sequences
+    across workflows; surface both as candidate skill extractions."""
     ir = build_ir(path)
     total_prompts = sum(
         1
         for n in ir.nodes
         if (n.kind.value if hasattr(n.kind, "value") else n.kind) == NodeKind.PROMPT.value
     )
+    total_workflows = sum(
+        1
+        for n in ir.nodes
+        if (n.kind.value if hasattr(n.kind, "value") else n.kind) == NodeKind.WORKFLOW.value
+    )
     clusters = extract_prompt_clusters(ir, threshold=threshold)
+    sequences = extract_repeated_sequences(ir)
 
-    table = Table(title=f"Prompt clusters (threshold={threshold:.2f})")
-    table.add_column("#", justify="right")
-    table.add_column("Size", justify="right")
-    table.add_column("Min sim", justify="right")
-    table.add_column("Max sim", justify="right")
-    table.add_column("Members")
+    prompt_table = Table(title=f"Prompt clusters (threshold={threshold:.2f})")
+    prompt_table.add_column("#", justify="right")
+    prompt_table.add_column("Size", justify="right")
+    prompt_table.add_column("Min sim", justify="right")
+    prompt_table.add_column("Max sim", justify="right")
+    prompt_table.add_column("Members")
     for i, c in enumerate(clusters, start=1):
-        table.add_row(
+        prompt_table.add_row(
             str(i),
             str(c.size),
             f"{c.min_similarity:.2f}",
             f"{c.max_similarity:.2f}",
             ", ".join(c.members),
         )
-    console.print(table)
+    console.print(prompt_table)
     console.print(f"[dim]{total_prompts} prompt(s) scanned, {len(clusters)} cluster(s).[/dim]")
+
+    seq_table = Table(title="Repeated tool sequences (length ≥ 2, in ≥ 2 workflows)")
+    seq_table.add_column("#", justify="right")
+    seq_table.add_column("Length", justify="right")
+    seq_table.add_column("In #wf", justify="right")
+    seq_table.add_column("Chain")
+    seq_table.add_column("Workflows")
+    for i, s in enumerate(sequences, start=1):
+        seq_table.add_row(
+            str(i),
+            str(s.length),
+            str(s.occurrences),
+            " → ".join(s.tools),
+            ", ".join(s.workflows),
+        )
+    console.print(seq_table)
+    console.print(
+        f"[dim]{total_workflows} workflow(s) scanned, {len(sequences)} repeated sequence(s).[/dim]"
+    )
 
     if report:
         report.write_text(
-            render_extract_report(clusters, threshold, total_prompts), encoding="utf-8"
+            render_extract_report(
+                clusters,
+                threshold,
+                total_prompts,
+                sequences=sequences,
+                total_workflows=total_workflows,
+            ),
+            encoding="utf-8",
         )
         console.print(f"[dim]Report written to {report}[/dim]")
 

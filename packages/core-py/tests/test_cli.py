@@ -112,6 +112,10 @@ def test_cli_skills_extract_default_threshold(sample_root: Path) -> None:
     assert "summarize_weekly" in result.output
     assert "classify_email" in result.output
     assert "extract_entities_v2" in result.output
+    # Tool-sequence section: daily_digest and weekly_digest share the full 4-step chain.
+    assert "3 workflow(s) scanned" in result.output
+    assert "1 repeated sequence(s)" in result.output
+    assert "fetch_articles" in result.output and "slack_post" in result.output
 
 
 def test_cli_skills_extract_high_threshold_collapses(sample_root: Path) -> None:
@@ -130,10 +134,15 @@ def test_cli_skills_extract_writes_report(sample_root: Path, tmp_path: Path) -> 
     body = report_path.read_text()
     assert "# Skills extract report" in body
     assert "Prompts scanned:** 6" in body
-    assert all(f"## Cluster {i}" in body for i in (1, 2, 3))
+    assert "Workflows scanned:** 3" in body
+    assert all(f"### Cluster {i}" in body for i in (1, 2, 3))
     # The extract_entities pair (~0.90) should trigger the near-duplicate suggestion tier.
     assert "Near-duplicate prompts" in body
     # The summarize pair (~0.63) hits the strong-overlap tier.
     assert "Strong structural overlap" in body
     # The classify pair (~0.54) hits the loose-family tier.
     assert "Loose family resemblance" in body
+    # Tool sequence section: daily_digest/weekly_digest share the full chain.
+    assert "## Repeated tool sequences" in body
+    assert "### Sequence 1" in body
+    assert "Strong factor-out candidate" in body

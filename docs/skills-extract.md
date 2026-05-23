@@ -68,12 +68,32 @@ The report annotates each cluster with a tier based on its **minimum** pairwise 
 
 Tier is chosen by *min* similarity (not max or mean) because the relevant question is "is **every** pair in this cluster close enough that one skill would serve all of them?" — a cluster's weakest link sets the merger ceiling.
 
+## Tool-sequence repetition
+
+In addition to prompt clustering, `praxis skills extract` finds **repeated tool sequences** across workflows: ordered chains of plugin calls (length ≥ 2) that appear verbatim in ≥ 2 workflows.
+
+Algorithm:
+
+1. For each `workflow` node in the IR, read `metadata["raw_steps"]` and extract the ordered list of plugin names.
+2. For every subsequence of length ≥ 2, tally which workflows it appears in (intra-workflow repeats don't inflate the count).
+3. Keep only subsequences appearing in ≥ 2 distinct workflows.
+4. Apply a **maximality filter**: a subsequence is suppressed if a longer one with the same workflow set already exists. This prevents the report from drowning in every sub-window of a long shared chain.
+
+Output is sorted by length descending, then by occurrence count, then alphabetically.
+
+Suggested actions:
+
+| Heuristic | Suggested action |
+|---|---|
+| length ≥ 4 OR occurrences ≥ 3 | **Strong factor-out candidate** — define one Hermes skill and call it from each workflow |
+| Otherwise | **Possible factor-out** — review whether the workflows share intent or just coincidentally call the same tools |
+
 ## Limitations
 
-- **Prompts only.** This release does not detect repeated *tool sequences* across workflows (that's the other half of skill extraction; see the v0.3 roadmap entry).
 - **No semantic understanding.** Two prompts that say "summarize" and "TL;DR" in different vocabularies will not cluster. The tokenizer is purely syntactic.
 - **Tokens are bag-based.** Bigrams capture local order; full-sentence order is not modeled.
-- **Single-link is permissive.** A chain of moderate pairs can produce a single large cluster (A~B at 0.5, B~C at 0.5 → all three cluster). If you see surprising mergers, look at the pairwise table in the report; the chain is visible there.
+- **Single-link is permissive** (prompts). A chain of moderate pairs can produce a single large cluster (A~B at 0.5, B~C at 0.5 → all three cluster). If you see surprising mergers, look at the pairwise table in the report; the chain is visible there.
+- **Sequence matching is exact** (tools). Two workflows that both call `fetch` and `parse` but in different orders won't be detected as sharing a chain. Order matters.
 
 ## When to run
 

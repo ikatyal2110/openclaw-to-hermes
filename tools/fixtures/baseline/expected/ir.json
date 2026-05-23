@@ -38,6 +38,12 @@
       "to": "tool.llm_summarize.5832eb46"
     },
     {
+      "from": "prompt.summarize_weekly.b92eecf8",
+      "kind": "dependency",
+      "label": "prompt:summarize_weekly",
+      "to": "tool.llm_summarize.5832eb46"
+    },
+    {
       "from": "scheduler.daily_digest__cron_0.a8ea69fb",
       "kind": "trigger",
       "label": "0 9 * * *",
@@ -48,6 +54,12 @@
       "kind": "trigger",
       "label": "/hooks/support",
       "to": "workflow.support_triage.f2b1e5a4"
+    },
+    {
+      "from": "scheduler.weekly_digest__cron_0.3423136f",
+      "kind": "trigger",
+      "label": "0 10 * * MON",
+      "to": "workflow.weekly_digest.f2715c20"
     },
     {
       "from": "tool.classify_ticket.a5e277f1",
@@ -116,6 +128,30 @@
       "kind": "control",
       "label": "route",
       "to": "tool.ticket_router.056cefb3"
+    },
+    {
+      "from": "workflow.weekly_digest.f2715c20",
+      "kind": "control",
+      "label": "dedupe",
+      "to": "tool.dedupe_seen.f7650ecd"
+    },
+    {
+      "from": "workflow.weekly_digest.f2715c20",
+      "kind": "control",
+      "label": "fetch",
+      "to": "tool.fetch_articles.d03c4684"
+    },
+    {
+      "from": "workflow.weekly_digest.f2715c20",
+      "kind": "control",
+      "label": "summarize",
+      "to": "tool.llm_summarize.5832eb46"
+    },
+    {
+      "from": "workflow.weekly_digest.f2715c20",
+      "kind": "control",
+      "label": "notify",
+      "to": "tool.slack_post.5821e6e4"
     }
   ],
   "nodes": [
@@ -484,6 +520,32 @@
         "framework": "openclaw",
         "original_kind": "trigger/webhook",
         "source_file": "workflows/support_triage.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "scheduled"
+      ],
+      "id": "scheduler.weekly_digest__cron_0.3423136f",
+      "inputs": [],
+      "kind": "scheduler",
+      "metadata": {
+        "spec": "0 10 * * MON",
+        "trigger_kind": "cron"
+      },
+      "name": "weekly_digest__cron_0",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Cron \u2014 passes through.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "trigger/cron",
+        "source_file": "workflows/weekly_digest.yaml"
       },
       "side_effects": []
     },
@@ -1003,6 +1065,80 @@
         "framework": "openclaw",
         "original_kind": "workflow",
         "source_file": "workflows/support_triage.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "sequenceable",
+        "side_effecting",
+        "scheduled"
+      ],
+      "description": "Weekly RSS roundup posted to Slack \u2014 drier theme grouping than the daily digest.",
+      "id": "workflow.weekly_digest.f2715c20",
+      "inputs": [],
+      "intent": {
+        "confidence": 0.95,
+        "description": "Weekly RSS roundup posted to Slack \u2014 drier theme grouping than the daily digest.",
+        "evidence": [
+          "description field present"
+        ],
+        "source": "static"
+      },
+      "kind": "workflow",
+      "metadata": {
+        "has_branches": false,
+        "raw_steps": [
+          {
+            "id": "fetch",
+            "plugin": "fetch_articles",
+            "with": {
+              "source": "${env.RSS_URL}"
+            }
+          },
+          {
+            "id": "dedupe",
+            "plugin": "dedupe_seen",
+            "with": {
+              "items": "${steps.fetch.output}"
+            }
+          },
+          {
+            "id": "summarize",
+            "plugin": "llm_summarize",
+            "with": {
+              "input": "${steps.dedupe.output}",
+              "prompt": "summarize_weekly"
+            }
+          },
+          {
+            "id": "notify",
+            "plugin": "slack_post",
+            "with": {
+              "body": "${steps.summarize.output}",
+              "channel": "${env.SLACK_CHANNEL}"
+            }
+          }
+        ],
+        "triggers": [
+          {
+            "kind": "cron",
+            "spec": "0 10 * * MON"
+          }
+        ]
+      },
+      "name": "weekly_digest",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Linear sequenceable workflow.",
+        "score": 0.95,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "workflow",
+        "source_file": "workflows/weekly_digest.yaml"
       },
       "side_effects": []
     }

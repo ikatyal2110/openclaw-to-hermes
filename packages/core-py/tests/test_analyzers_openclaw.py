@@ -22,7 +22,7 @@ def _edge_kind(e) -> str:  # noqa: ANN001
 
 def test_analyzer_produces_expected_workflows(sample_root: Path) -> None:
     ir = analyze_openclaw_project(sample_root)
-    assert _kinds(ir, NodeKind.WORKFLOW) == ["daily_digest", "support_triage"]
+    assert _kinds(ir, NodeKind.WORKFLOW) == ["daily_digest", "support_triage", "weekly_digest"]
 
 
 def test_analyzer_produces_expected_tools(sample_root: Path) -> None:

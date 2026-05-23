@@ -1,0 +1,2 @@
+cron: 0 10 * * MON
+invoke_skill: weekly_digest

@@ -134,13 +134,17 @@ The classifier is rule-based and will remain so — opaque LLM gating kills the 
 
 ## Skill extraction (v0.2)
 
-`praxis skills extract` clusters prompts by token-bigram Jaccard similarity (single-link, configurable threshold) and emits a Markdown report with tiered suggestions:
+`praxis skills extract` surfaces two kinds of candidate Hermes-side consolidations:
+
+**1. Prompt clusters** — prompts that share enough structure (Jaccard ≥ threshold on token bigrams) to suggest they should be one parameterized skill rather than several near-duplicate templates. Tiered actions:
 
 | Min similarity | Suggested action |
 |---|---|
 | ≥ 0.85 | Near-duplicate — merge into one skill and parameterize the differing variables |
 | ≥ 0.60 | Strong structural overlap — likely one skill with two prose variants |
 | ≥ threshold | Loose family resemblance — review before merging |
+
+**2. Repeated tool sequences** — *maximal* tool chains (length ≥ 2) that appear verbatim in ≥ 2 workflows. Strong candidates for factoring into a single named skill rather than inlining the same chain in every workflow. The detector reports only the longest distinct chains, not their sub-windows.
 
 See [`docs/skills-extract.md`](docs/skills-extract.md).
 
@@ -169,8 +173,8 @@ praxis skills extract <path> [--threshold N] [--report FILE]
 ## Roadmap
 
 - **v0.1.** scan / graph / report / migrate / ir validate / ir diff, OpenClaw → Hermes, rule-based.
-- **v0.2 (current).** Prompt clustering & skill extraction. Golden-file fixture lock. `doctor` and `--version`. Strict mypy in CI.
-- **v0.3.** Tool-sequence repetition (the other half of skill extraction). LLM-assisted intent inference with content-addressed caching. Memory schema beyond KV/vector.
+- **v0.2 (current).** Prompt clustering & tool-sequence repetition detection (`praxis skills extract`). Golden-file fixture lock. `doctor` and `--version`. Strict mypy in CI.
+- **v0.3.** LLM-assisted intent inference with content-addressed caching. Memory schema beyond KV/vector. Round-trip tests (Hermes → IR → Hermes).
 - **v0.4.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
 - **v0.5.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
 - **v0.6.** VS Code extension surfacing the migration report as inline annotations.

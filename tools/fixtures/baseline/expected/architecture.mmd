@@ -14,6 +14,7 @@ flowchart LR
     prompt_summarize_weekly_b92eecf8>""prompt: summarize_weekly""]
     scheduler_daily_digest__cron_0_a8ea69fb(("scheduler: daily_digest__cron_0"))
     scheduler_support_triage__webhook_0_aecba949(("scheduler: support_triage__webhook_0"))
+    scheduler_weekly_digest__cron_0_3423136f(("scheduler: weekly_digest__cron_0"))
     service_jira_58c6ed2e{{"service: jira"}}
     service_openai_b65eb310{{"service: openai"}}
     tool_classify_ticket_a5e277f1[/"tool: classify_ticket"/]
@@ -24,11 +25,14 @@ flowchart LR
     tool_ticket_router_056cefb3[/"tool: ticket_router"/]
     workflow_daily_digest_e88d0b2a["workflow: daily_digest"]
     workflow_support_triage_f2b1e5a4["workflow: support_triage"]
+    workflow_weekly_digest_f2715c20["workflow: weekly_digest"]
 
     prompt_classify_58b0dd7d -.-> tool_classify_ticket_a5e277f1
     prompt_summarize_308b46e6 -.-> tool_llm_summarize_5832eb46
+    prompt_summarize_weekly_b92eecf8 -.-> tool_llm_summarize_5832eb46
     scheduler_daily_digest__cron_0_a8ea69fb ==> workflow_daily_digest_e88d0b2a
     scheduler_support_triage__webhook_0_aecba949 ==> workflow_support_triage_f2b1e5a4
+    scheduler_weekly_digest__cron_0_3423136f ==> workflow_weekly_digest_f2715c20
     tool_classify_ticket_a5e277f1 -->|data| tool_ticket_router_056cefb3
     tool_dedupe_seen_f7650ecd -.->|reads| memory_store_seen_articles_224b7537
     tool_dedupe_seen_f7650ecd -.->|writes| memory_store_seen_articles_224b7537
@@ -41,6 +45,10 @@ flowchart LR
     workflow_daily_digest_e88d0b2a --> tool_slack_post_5821e6e4
     workflow_support_triage_f2b1e5a4 --> tool_classify_ticket_a5e277f1
     workflow_support_triage_f2b1e5a4 --> tool_ticket_router_056cefb3
+    workflow_weekly_digest_f2715c20 --> tool_dedupe_seen_f7650ecd
+    workflow_weekly_digest_f2715c20 --> tool_fetch_articles_d03c4684
+    workflow_weekly_digest_f2715c20 --> tool_llm_summarize_5832eb46
+    workflow_weekly_digest_f2715c20 --> tool_slack_post_5821e6e4
 
     class memory_store_seen_articles_224b7537 portable
     class memory_store_ticket_history_ab3bfe34 needsReview
@@ -52,6 +60,7 @@ flowchart LR
     class prompt_summarize_weekly_b92eecf8 portable
     class scheduler_daily_digest__cron_0_a8ea69fb portable
     class scheduler_support_triage__webhook_0_aecba949 partial
+    class scheduler_weekly_digest__cron_0_3423136f portable
     class service_jira_58c6ed2e partial
     class service_openai_b65eb310 partial
     class tool_classify_ticket_a5e277f1 portable
@@ -62,3 +71,4 @@ flowchart LR
     class tool_ticket_router_056cefb3 partial
     class workflow_daily_digest_e88d0b2a portable
     class workflow_support_triage_f2b1e5a4 portable
+    class workflow_weekly_digest_f2715c20 portable
