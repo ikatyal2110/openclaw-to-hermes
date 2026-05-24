@@ -195,19 +195,30 @@ class WorkflowsAnalyzer(Analyzer):
         triggers: list[dict[str, Any]],
         steps: list[dict[str, Any]],
     ) -> Intent | None:
-        """Static, rule-based intent. The LLM-assisted pass (v0.2) refines this."""
+        """Static, rule-based intent. The LLM-assisted pass (v0.8+) refines this.
+
+        Heuristics, in order of contribution:
+          1. Explicit `description:` field — highest confidence.
+          2. Cron/webhook trigger metadata — adds 'scheduled' / 'webhook-driven'.
+          3. Step plugin chain — shows the procedure.
+          4. Workflow name pattern (daily_*, weekly_*, monthly_*) — schedule hint.
+          5. Plugin-name verbs (fetch_*, classify_*, summarize_*, notify_*) — action verbs.
+        """
         evidence: list[str] = []
-        bits: list[str] = []
 
         desc = (data.get("description") or "").strip()
         if desc:
-            return Intent(
-                description=desc,
-                confidence=0.95,
-                evidence=["description field present"],
-                source="static",
-            )
+            # Lower confidence for placeholder/non-descriptive content.
+            conf = 0.95
+            evidence.append("description field present")
+            if len(desc) < 20 or desc.lower() in ("todo", "tbd", "wip", "fixme"):
+                conf = 0.5
+                evidence.append("description is short/placeholder — confidence reduced")
+            return Intent(description=desc, confidence=conf, evidence=evidence, source="static")
 
+        bits: list[str] = []
+
+        # Trigger-based hints.
         cron_specs = [
             t.get("spec") for t in triggers if isinstance(t, dict) and t.get("kind") == "cron"
         ]
@@ -221,16 +232,93 @@ class WorkflowsAnalyzer(Analyzer):
             evidence.append(f"webhook {p}")
             bits.append("webhook-driven")
 
-        plugin_names = [s.get("plugin") for s in steps if isinstance(s, dict)]
-        evidence.extend(f"step: {p}" for p in plugin_names if p)
-        if plugin_names:
-            bits.append(" → ".join(p for p in plugin_names if p))
+        # Workflow-name pattern.
+        lower = name.lower()
+        for cadence in ("daily", "weekly", "monthly", "hourly", "nightly"):
+            if (
+                lower.startswith(cadence)
+                or f"_{cadence}_" in lower
+                or lower.endswith(f"_{cadence}")
+            ):
+                evidence.append(f"name suggests {cadence} cadence")
+                bits.append(f"{cadence} task")
+                break
+
+        # Plugin-name verb extraction.
+        plugin_names = [s.get("plugin") for s in steps if isinstance(s, dict) and s.get("plugin")]
+        action_verbs = _verbs_from_plugins(plugin_names)
+        if action_verbs:
+            evidence.append(f"action verbs: {', '.join(action_verbs)}")
+            bits.append(" → ".join(action_verbs))
+        elif plugin_names:
+            evidence.extend(f"step: {p}" for p in plugin_names)
+            bits.append(" → ".join(str(p) for p in plugin_names))
 
         if not bits:
             return None
+
+        # Confidence: webhook-driven and verb-rich → 0.7; just plugin chain → 0.5.
+        confidence = 0.5
+        if "webhook-driven" in bits or any("scheduled" in b for b in bits):
+            confidence += 0.1
+        if action_verbs:
+            confidence += 0.1
+
         return Intent(
             description=f"{name}: {'; '.join(bits)}",
-            confidence=0.5,
+            confidence=min(confidence, 0.95),
             evidence=evidence,
             source="static",
         )
+
+
+_PLUGIN_VERB_PREFIXES = (
+    "fetch",
+    "get",
+    "list",
+    "load",
+    "read",
+    "classify",
+    "score",
+    "rank",
+    "filter",
+    "dedupe",
+    "summarize",
+    "translate",
+    "transform",
+    "extract",
+    "parse",
+    "store",
+    "save",
+    "write",
+    "send",
+    "notify",
+    "post",
+    "publish",
+    "page",
+    "page_oncall",
+    "create",
+    "delete",
+    "update",
+    "render",
+)
+
+
+def _verbs_from_plugins(plugin_names: list[str | None]) -> list[str]:
+    """Extract the leading verb from each plugin name when it matches a known verb.
+
+    `fetch_articles` → 'fetch', `classify_ticket` → 'classify', `slack_post` → 'post'.
+    Returns a deduplicated, order-preserving list of verbs.
+    """
+    seen: set[str] = set()
+    verbs: list[str] = []
+    for raw in plugin_names:
+        if not raw:
+            continue
+        parts = raw.lower().split("_")
+        for token in (parts[0], parts[-1]):  # check first AND last segment
+            if token in _PLUGIN_VERB_PREFIXES and token not in seen:
+                verbs.append(token)
+                seen.add(token)
+                break
+    return verbs

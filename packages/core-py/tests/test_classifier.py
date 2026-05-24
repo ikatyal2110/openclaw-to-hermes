@@ -52,9 +52,44 @@ def test_vector_memory_needs_review() -> None:
     assert p.tier == "needs_review"
 
 
-def test_sql_memory_is_unsupported() -> None:
+def test_sql_memory_is_partial_via_wrapper_tool() -> None:
+    """v0.8: relational backends are translatable via a wrapper tool, not unsupported."""
     p = _classify(_node(NodeKind.MEMORY_STORE, spec={"kind": "sql"}))
-    assert p.tier == "unsupported"
+    assert p.tier == "partial"
+    assert p.blockers
+
+
+def test_postgres_memory_is_partial_via_wrapper_tool() -> None:
+    p = _classify(_node(NodeKind.MEMORY_STORE, spec={"kind": "postgres"}))
+    assert p.tier == "partial"
+
+
+def test_redis_memory_is_portable_as_kv() -> None:
+    p = _classify(_node(NodeKind.MEMORY_STORE, spec={"kind": "redis"}))
+    assert p.tier == "portable"
+
+
+def test_sqlite_memory_needs_review() -> None:
+    p = _classify(_node(NodeKind.MEMORY_STORE, spec={"kind": "sqlite"}))
+    assert p.tier == "needs_review"
+    assert any("KV" in b or "tool" in b for b in p.blockers)
+
+
+def test_dynamodb_memory_needs_review() -> None:
+    p = _classify(_node(NodeKind.MEMORY_STORE, spec={"kind": "dynamodb"}))
+    assert p.tier == "needs_review"
+
+
+def test_s3_memory_needs_review_as_blob_storage() -> None:
+    p = _classify(_node(NodeKind.MEMORY_STORE, spec={"kind": "s3"}))
+    assert p.tier == "needs_review"
+    assert any("bucket" in b.lower() or "tool" in b.lower() for b in p.blockers)
+
+
+def test_unknown_memory_kind_has_actionable_blockers() -> None:
+    p = _classify(_node(NodeKind.MEMORY_STORE, spec={"kind": "etcd"}))
+    assert p.tier == "needs_review"
+    assert p.blockers
 
 
 def test_cron_scheduler_is_portable() -> None:

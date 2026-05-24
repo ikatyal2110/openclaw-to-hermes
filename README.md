@@ -204,11 +204,12 @@ For a step-by-step first-day walkthrough on a real project, see [`docs/migrating
 - **v0.4.** Migration checklist in the report (actionable playbook, not just a diagnostic). `praxis init` scaffolder. `--json` output for scan + explain.
 - **v0.5.** `praxis check` (CI-friendly pre-flight validator). `when:` clause preservation through translation (auto-emitted as `_praxis_when` with a TODO for verification).
 - **v0.6.** `for_each` loop preservation (mirrors `when:` pattern). `praxis stats` for at-a-glance analytics. README + CLI reference polish.
-- **v0.7 (current).** `retry:` block preservation (completes the `when:`/`for_each`/`retry:` trio). `praxis migrate --dry-run`. Second golden fixture (`branchy`) exercising all three constructs.
-- **v0.8.** LLM-assisted intent inference with content-addressed caching. Memory schema beyond KV/vector. Round-trip tests (Hermes → IR → Hermes).
-- **v0.9.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
-- **v0.10.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
-- **v0.11.** VS Code extension surfacing the migration report as inline annotations.
+- **v0.7.** `retry:` block preservation (completes the `when:`/`for_each`/`retry:` trio). `praxis migrate --dry-run`. Second golden fixture (`branchy`) exercising all three constructs.
+- **v0.8 (current).** Expanded memory store classifier (Redis/Memcached portable, SQL/Postgres/MySQL partial via wrapper tool, SQLite/DynamoDB/S3 needs_review). Richer rule-based intent inference (cadence name patterns, plugin verbs, description-quality confidence).
+- **v0.9.** LLM-assisted intent inference with content-addressed caching. Round-trip tests (Hermes → IR → Hermes).
+- **v0.10.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
+- **v0.11.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
+- **v0.12.** VS Code extension surfacing the migration report as inline annotations.
 - **v1.0.** Stable IR. Backend authoring guide. Public benchmark fixture suite. PyPI release.
 
 ## Contributing

@@ -137,10 +137,16 @@ def _classify_tool(node: Node, meta: dict[str, Any]) -> Portability:
 def _classify_memory(node: Node, meta: dict[str, Any]) -> Portability:
     spec = meta.get("spec") or {}
     kind = (spec.get("kind") or "").lower()
-    if kind == "kv":
-        return Portability(
-            score=1.0, tier=PortabilityTier.PORTABLE, rationale="KV store — direct map."
-        )
+
+    # KV-equivalent backends — direct or near-direct map to Hermes' kv primitive.
+    if kind in ("kv", "redis", "memcached"):
+        rationale = {
+            "kv": "KV store — direct map.",
+            "redis": "Redis used as a KV store — direct map; declare TTL semantics on the Hermes side.",
+            "memcached": "Memcached used as a KV store — direct map; evictions differ from Hermes default.",
+        }[kind]
+        return Portability(score=1.0, tier=PortabilityTier.PORTABLE, rationale=rationale)
+
     if kind == "vector":
         return Portability(
             score=0.6,
@@ -148,14 +154,79 @@ def _classify_memory(node: Node, meta: dict[str, Any]) -> Portability:
             rationale="Vector store — embedding model not declared in source; specify on the Hermes side.",
             blockers=["Which embedding model produced these vectors?"],
         )
-    if kind == "sql":
+
+    # Relational backends — translatable but require a wrapper tool on the Hermes side.
+    if kind in ("sql", "postgres", "postgresql", "mysql", "mariadb"):
         return Portability(
-            score=0.0,
-            tier=PortabilityTier.UNSUPPORTED,
-            rationale="SQL-backed memory not supported in v0.1; access via a tool that wraps the DB.",
+            score=0.4,
+            tier=PortabilityTier.PARTIAL,
+            rationale=(
+                f"Relational store ({kind}) — Hermes has no SQL primitive. Expose the table "
+                "as an HTTP/RPC tool whose handler runs the query, and treat the tool as the "
+                "memory surface."
+            ),
+            blockers=[
+                "Define a wrapper tool that performs the read/write query.",
+                "Confirm transaction/isolation guarantees still hold under the tool boundary.",
+            ],
         )
+
+    # Embedded/file-based stores — common in dev, awkward in production migration.
+    if kind in ("sqlite", "file", "json"):
+        return Portability(
+            score=0.5,
+            tier=PortabilityTier.NEEDS_REVIEW,
+            rationale=(
+                f"{kind.capitalize()} store — host-local state doesn't transfer cleanly to a "
+                "distributed Hermes deployment. Move the data to a shared backend (KV or DB) or "
+                "wrap as a tool."
+            ),
+            blockers=[
+                "Plan the data migration: dump current state, import into target backend.",
+                "Decide between KV (if K→V semantics fit) and a wrapper tool over the original file.",
+            ],
+        )
+
+    # Document/wide-column NoSQL stores.
+    if kind in ("dynamodb", "cosmos", "firestore", "mongodb"):
+        return Portability(
+            score=0.5,
+            tier=PortabilityTier.NEEDS_REVIEW,
+            rationale=(
+                f"{kind} — NoSQL semantics (consistency, secondary indexes, TTL) vary by "
+                "vendor. Map the document model into Hermes either as a KV store (if access "
+                "is point-lookup) or as a wrapper tool (if queries are richer)."
+            ),
+            blockers=[
+                "Audit the access patterns: point-lookup vs. query vs. scan.",
+                "Decide KV-mapping vs. wrapper-tool based on query complexity.",
+            ],
+        )
+
+    # Object storage.
+    if kind in ("s3", "gcs", "blob", "azure_blob"):
+        return Portability(
+            score=0.5,
+            tier=PortabilityTier.NEEDS_REVIEW,
+            rationale=(
+                f"{kind} object storage — Hermes treats blob storage as an external service, "
+                "not a memory primitive. Wire as a tool that reads/writes the bucket; bring "
+                "credentials in via the secrets store."
+            ),
+            blockers=[
+                "Define a tool that wraps the bucket operations the workflows need.",
+                "Confirm encryption-at-rest and access-control requirements on the Hermes side.",
+            ],
+        )
+
     return Portability(
-        score=0.3, tier=PortabilityTier.NEEDS_REVIEW, rationale=f"Unknown memory kind {kind!r}."
+        score=0.3,
+        tier=PortabilityTier.NEEDS_REVIEW,
+        rationale=f"Unknown memory kind {kind!r} — Praxis doesn't recognize this backend.",
+        blockers=[
+            "Declare the backend explicitly so a Hermes-side equivalent can be chosen.",
+            "If this is a common backend Praxis should support, open an issue.",
+        ],
     )
 
 

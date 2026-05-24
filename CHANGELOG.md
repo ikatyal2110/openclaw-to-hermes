@@ -4,6 +4,19 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-05-24
+
+### Added
+- **Expanded memory store classifier.** SQL/Postgres/MySQL move from `unsupported` to `partial` (translatable via a wrapper tool, with actionable blockers). Redis and Memcached classify as `portable` (KV-equivalent). SQLite, file, and JSON stores classify as `needs_review` (state-migration question). DynamoDB, Cosmos, Firestore, and MongoDB classify as `needs_review` with access-pattern blockers. S3, GCS, and blob stores classify as `needs_review` as object storage. Unknown kinds give actionable blockers instead of an opaque message.
+- **Richer rule-based intent inference.** Cadence patterns in workflow names (`daily_*`, `weekly_*`, `monthly_*`, `nightly_*`, `hourly_*`) contribute to inferred intent. Plugin-name verbs (`fetch_*`, `classify_*`, `summarize_*`, `slack_post`, etc.) extract into the description. Placeholder descriptions (`TODO`, `TBD`, single-word) downgrade confidence from 0.95 to 0.5. Webhook/scheduled triggers raise confidence on plugin-chain-derived intents.
+
+### Changed
+- **BREAKING (classifier):** `kind: sql` memory stores now classify as `partial` instead of `unsupported`. Existing reports and golden fixtures that asserted `unsupported` will need an update. (No IR schema change — only tier mapping.)
+
+### Tests
+- 13 new tests: 7 for memory store kinds (sql/postgres/redis/sqlite/dynamodb/s3/unknown), 6 for intent inference (long description, placeholder, short, cron-only, cadence name pattern, plugin verbs, webhook confidence).
+- Total: 155 tests passing.
+
 ## [0.7.0] — 2026-05-24
 
 ### Added
@@ -114,7 +127,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.4.0...v0.5.0

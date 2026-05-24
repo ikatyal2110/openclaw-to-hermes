@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "praxis-core"
-version = "0.7.0"
+version = "0.8.0"
 description = "Praxis: migration engine and semantic translator from OpenClaw to Hermes agent systems."
 readme = "README.md"
 requires-python = ">=3.11"
