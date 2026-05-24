@@ -4,6 +4,16 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.10.0] — 2026-05-24
+
+### Changed
+- **Cleaner Hermes emission for the portable happy path.** The emitter now drops the `_praxis: {confidence, todos}` metadata block when confidence ≥ 0.9 AND no TODOs exist. Portable, high-confidence skills now look indistinguishable from hand-written Hermes YAML. Skills with TODOs or sub-0.9 confidence still carry the block (the reviewer needs that signal).
+
+### Tests
+- 3 new tests for emitter behavior: portable skill drops `_praxis`, TODO-bearing skill keeps it, low-confidence skill keeps it.
+- Re-baselined both golden fixtures for the cleaner output.
+- Total: 166 tests passing.
+
 ## [0.9.0] — 2026-05-24
 
 ### Added
@@ -144,7 +154,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.6.0...v0.7.0

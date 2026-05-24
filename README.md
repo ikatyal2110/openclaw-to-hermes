@@ -207,11 +207,12 @@ For a step-by-step first-day walkthrough on a real project, see [`docs/migrating
 - **v0.6.** `for_each` loop preservation (mirrors `when:` pattern). `praxis stats` for at-a-glance analytics. README + CLI reference polish.
 - **v0.7.** `retry:` block preservation (completes the `when:`/`for_each`/`retry:` trio). `praxis migrate --dry-run`. Second golden fixture (`branchy`) exercising all three constructs.
 - **v0.8.** Expanded memory store classifier (Redis/Memcached portable, SQL/Postgres/MySQL partial via wrapper tool, SQLite/DynamoDB/S3 needs_review). Richer rule-based intent inference.
-- **v0.9 (current).** Expanded plugin runtime classifier (20+ runtimes including docker/lambda/grpc/graphql/shell/multi-language). `praxis ir to-mermaid` for offline graph rendering.
-- **v0.10.** LLM-assisted intent inference with content-addressed caching. Round-trip tests (Hermes → IR → Hermes).
-- **v0.11.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
-- **v0.12.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
-- **v0.13.** VS Code extension surfacing the migration report as inline annotations.
+- **v0.9.** Expanded plugin runtime classifier (20+ runtimes including docker/lambda/grpc/graphql/shell/multi-language). `praxis ir to-mermaid` for offline graph rendering.
+- **v0.10 (current).** Cleaner Hermes emission — `_praxis` metadata block dropped on portable, high-confidence skills so they look hand-written.
+- **v0.11.** LLM-assisted intent inference with content-addressed caching. Round-trip tests (Hermes → IR → Hermes).
+- **v0.12.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
+- **v0.13.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
+- **v0.14.** VS Code extension surfacing the migration report as inline annotations.
 - **v1.0.** Stable IR. Backend authoring guide. Public benchmark fixture suite. PyPI release.
 
 ## Contributing

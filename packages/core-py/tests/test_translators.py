@@ -95,3 +95,55 @@ def test_unsupported_memory_is_not_emitted() -> None:
     ir.nodes.append(n)
     project = translate_openclaw_to_hermes(ir)
     assert project.memories == []
+
+
+def test_emitter_drops_praxis_block_when_high_confidence_and_no_todos(sample_root) -> None:
+    """v0.10: clean output for the portable happy path. _praxis block only appears
+    when confidence < 0.9 OR todos exist."""
+    from praxis_core.emitters.hermes import _skill_dict
+    from praxis_core.pipeline import build_ir
+    from praxis_core.translators import translate_openclaw_to_hermes
+
+    ir = build_ir(sample_root)
+    project = translate_openclaw_to_hermes(ir)
+    daily = next(s for s in project.skills if s.name == "daily_digest")
+    emitted = _skill_dict(daily)
+    assert "_praxis" not in emitted, "Portable skill with no todos should have no _praxis block."
+
+
+def test_emitter_keeps_praxis_block_when_todos_present() -> None:
+    """A skill with TODOs always gets _praxis emitted even at confidence 1.0."""
+    from praxis_core.emitters.hermes import _skill_dict
+    from praxis_core.translators.openclaw_to_hermes.types import HermesSkill
+
+    skill = HermesSkill(
+        name="x",
+        description="x",
+        when_to_use=[],
+        inputs={},
+        procedure=[],
+        confidence=1.0,
+        todos=["verify something"],
+    )
+    emitted = _skill_dict(skill)
+    assert "_praxis" in emitted
+    assert emitted["_praxis"]["todos"] == ["verify something"]
+
+
+def test_emitter_keeps_praxis_block_when_low_confidence() -> None:
+    """A skill below the confidence threshold gets _praxis even without todos."""
+    from praxis_core.emitters.hermes import _skill_dict
+    from praxis_core.translators.openclaw_to_hermes.types import HermesSkill
+
+    skill = HermesSkill(
+        name="x",
+        description="x",
+        when_to_use=[],
+        inputs={},
+        procedure=[],
+        confidence=0.6,
+        todos=[],
+    )
+    emitted = _skill_dict(skill)
+    assert "_praxis" in emitted
+    assert emitted["_praxis"]["confidence"] == 0.6

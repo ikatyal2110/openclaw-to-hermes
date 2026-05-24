@@ -75,8 +75,11 @@ def _skill_dict(s: HermesSkill) -> dict[str, Any]:
     if s.inputs:
         out["inputs"] = s.inputs
     out["procedure"] = s.procedure
-    if s.confidence < 1.0:
-        out["_praxis"] = {"confidence": round(s.confidence, 3)}
+    # Only emit the Praxis metadata block when the user actually needs to see it:
+    # either the intent is non-trivial (confidence < 0.9) or there are TODOs to act on.
+    # A high-confidence, clean translation should look like a hand-written Hermes skill.
+    if s.confidence < 0.9 or s.todos:
+        out["_praxis"] = {"confidence": round(s.confidence, 2)}
         if s.todos:
             out["_praxis"]["todos"] = s.todos
     return out

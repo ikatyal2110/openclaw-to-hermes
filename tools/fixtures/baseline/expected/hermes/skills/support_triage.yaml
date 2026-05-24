@@ -14,5 +14,3 @@ procedure:
     ticket: ${trigger.body}
     category: ${steps.classify.output.category}
   as: route
-_praxis:
-  confidence: 0.95

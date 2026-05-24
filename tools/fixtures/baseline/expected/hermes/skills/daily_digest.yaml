@@ -28,5 +28,3 @@ procedure:
     channel: ${slack_channel}
     body: ${summarize}
   as: notify
-_praxis:
-  confidence: 0.95
