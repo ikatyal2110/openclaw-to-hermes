@@ -1,0 +1,33 @@
+name: incident_response
+description: "Triage incoming alerts, escalate by severity, and notify a fan-out of recipients with retries."
+triggers:
+  - kind: webhook
+    path: /alerts/incoming
+steps:
+  - id: parse
+    plugin: parse_alert
+    with:
+      payload: "${trigger.body}"
+  - id: classify
+    plugin: classify_severity
+    with:
+      alert: "${steps.parse.output}"
+  - id: page
+    plugin: pagerduty_create
+    when: "${steps.classify.output.severity == 'critical'}"
+    with:
+      token: "${env.PAGERDUTY_TOKEN}"
+      summary: "${steps.parse.output.summary}"
+    retry:
+      max_attempts: 3
+      backoff: exponential
+      initial_delay_seconds: 2
+  - id: notify
+    plugin: send_email
+    for_each: "${steps.classify.output.subscribers}"
+    with:
+      to: "${item.email}"
+      body: "${steps.parse.output.summary}"
+    retry:
+      max_attempts: 2
+      backoff: linear

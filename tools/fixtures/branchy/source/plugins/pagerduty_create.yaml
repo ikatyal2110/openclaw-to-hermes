@@ -1,0 +1,14 @@
+name: pagerduty_create
+description: "Create a PagerDuty incident via the v2 events API."
+runtime: http
+spec:
+  url: "${env.PAGERDUTY_URL}"
+  method: POST
+inputs:
+  - name: token
+    type: string
+  - name: summary
+    type: string
+outputs:
+  - name: dedup_key
+    type: string

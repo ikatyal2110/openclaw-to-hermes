@@ -1,0 +1,11 @@
+name: classify_severity
+description: Classify an alert by severity using a rule table.
+runtime: python
+spec: {}
+inputs:
+- name: alert
+  type: object
+  required: true
+outputs:
+- name: classification
+  type: object

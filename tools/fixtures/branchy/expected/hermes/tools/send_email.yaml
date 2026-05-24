@@ -1,0 +1,14 @@
+name: send_email
+description: Send a notification email.
+runtime: http
+spec: {}
+inputs:
+- name: to
+  type: string
+  required: true
+- name: body
+  type: string
+  required: true
+outputs:
+- name: message_id
+  type: string

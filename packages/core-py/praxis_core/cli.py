@@ -141,18 +141,49 @@ def migrate_cmd(
         "hermes", "--target", help="Target framework (only 'hermes' in v0.1)."
     ),
     out: Path = typer.Option(Path("./out"), "--out", help="Output directory."),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Build the IR and translate, but print the manifest of files that would be written instead of touching disk.",
+    ),
 ) -> None:
     """Translate the project to the target framework. Writes files + report + IR."""
     if target != "hermes":
         console.print(f"[red]Target '{target}' not supported in v0.1. Use 'hermes'.[/red]")
         raise typer.Exit(2)
+    if dry_run:
+        from praxis_core.pipeline import build_ir as _build_ir
+        from praxis_core.translators import translate_openclaw_to_hermes as _translate
+
+        ir = _build_ir(path)
+        project = _translate(ir)
+        console.print(f"[cyan]Dry run[/cyan] — would write under {out}/hermes/:")
+        totals: dict[str, int] = {
+            "skills": len(project.skills),
+            "tools": len(project.tools),
+            "schedules": len(project.schedules),
+            "memory": len(project.memories),
+            "prompts": len(project.prompts),
+        }
+        for kind, names_ext in [
+            ("skills", [(s.name, "yaml") for s in project.skills]),
+            ("tools", [(t.name, "yaml") for t in project.tools]),
+            ("schedules", [(s.name, "yaml") for s in project.schedules]),
+            ("memory", [(m.name, "yaml") for m in project.memories]),
+            ("prompts", [(p.name, p.format) for p in project.prompts]),
+        ]:
+            for name, ext in sorted(names_ext):
+                console.print(f"  hermes/{kind}/{name}.{ext}")
+        console.print("  ir.json  MIGRATION_REPORT.md  architecture.mmd")
+        console.print(f"[dim]totals: {totals}[/dim]")
+        return
     result = migrate(path, out)
     console.print(f"[green]Migrated[/green] → {out}")
     console.print(f"  report: {result['report_path']}")
     console.print(f"  graph : {result['graph_path']}")
     console.print(f"  ir    : {result['ir_path']}")
-    totals = {k: len(v) for k, v in result["written"].items()}
-    console.print(f"  files : {totals}")
+    totals_written = {k: len(v) for k, v in result["written"].items()}
+    console.print(f"  files : {totals_written}")
 
 
 @ir_app.command("validate")

@@ -1,0 +1,5 @@
+name: recent_incidents
+kind: kv
+key_type: string
+value_type: object
+ttl_seconds: 86400

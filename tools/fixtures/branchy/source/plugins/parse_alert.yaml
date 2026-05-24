@@ -1,0 +1,10 @@
+name: parse_alert
+description: "Parse a raw alert payload into a structured shape."
+runtime: python
+pure: true
+inputs:
+  - name: payload
+    type: object
+outputs:
+  - name: parsed
+    type: object

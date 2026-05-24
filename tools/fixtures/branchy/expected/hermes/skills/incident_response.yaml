@@ -1,0 +1,49 @@
+name: incident_response
+description: Triage incoming alerts, escalate by severity, and notify a fan-out of recipients with retries.
+when_to_use:
+- "Equivalent task is requested (parse_alert \u2192 classify_severity \u2192 pagerduty_create \u2192 send_email)"
+- HTTP request arrives at webhook path '/alerts/incoming'
+inputs:
+  pagerduty_token:
+    type: string
+    env: PAGERDUTY_TOKEN
+procedure:
+- tool: parse_alert
+  with:
+    payload: ${trigger.body}
+  as: parse
+- tool: classify_severity
+  with:
+    alert: ${parse}
+  as: classify
+- tool: pagerduty_create
+  with:
+    token: ${pagerduty_token}
+    summary: ${steps.parse.output.summary}
+  as: page
+  _praxis_when: ${steps.classify.output.severity == 'critical'}
+  _praxis_retry:
+    max_attempts: 3
+    backoff: exponential
+    initial_delay_seconds: 2
+- tool: send_email
+  with:
+    to: ${item.email}
+    body: ${steps.parse.output.summary}
+  as: notify
+  _praxis_for_each: ${steps.classify.output.subscribers}
+  _praxis_retry:
+    max_attempts: 2
+    backoff: linear
+_praxis:
+  confidence: 0.95
+  todos:
+  - "Conditional branches (`when:` clauses) \u2014 split into multiple skills."
+  - "Loop step \u2014 recommend a single tool that handles the collection."
+  - "Conditional step(s) page preserved as `_praxis_when` \u2014 verify the expression syntax on the Hermes\
+    \ side and rename to `when:` once confirmed."
+  - "Loop step(s) notify preserved as `_praxis_for_each` \u2014 Hermes typically handles collections inside\
+    \ a tool; consider whether the loop should move into the tool implementation rather than the skill\
+    \ procedure."
+  - "Retry policy on step(s) page, notify preserved as `_praxis_retry` \u2014 OpenClaw retry keys (max_attempts,\
+    \ backoff, etc.) may differ from Hermes; verify and rename."

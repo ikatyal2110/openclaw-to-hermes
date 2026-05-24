@@ -99,3 +99,43 @@ def test_for_each_produces_todo(tmp_path: Path) -> None:
     hermes = translate_openclaw_to_hermes(ir)
     skill = next(s for s in hermes.skills if s.name == "loopy")
     assert any("_praxis_for_each" in todo for todo in skill.todos)
+
+
+def _make_project_with_retry(tmp_path: Path) -> Path:
+    project = tmp_path / "flaky"
+    (project / "workflows").mkdir(parents=True)
+    (project / "plugins").mkdir()
+    (project / "workflows" / "flaky.yaml").write_text(
+        """name: flaky
+description: "Retry a flaky upstream API."
+steps:
+  - id: call
+    plugin: upstream_call
+    retry:
+      max_attempts: 3
+      backoff: exponential
+      initial_delay_seconds: 1
+"""
+    )
+    (project / "plugins" / "upstream_call.yaml").write_text(
+        "name: upstream_call\nruntime: http\nspec: {url: http://x}\n"
+    )
+    return project
+
+
+def test_retry_block_survives_into_procedure(tmp_path: Path) -> None:
+    project = _make_project_with_retry(tmp_path)
+    ir = build_ir(project)
+    hermes = translate_openclaw_to_hermes(ir)
+    skill = next(s for s in hermes.skills if s.name == "flaky")
+    call = next(p for p in skill.procedure if p.get("as") == "call")
+    assert "_praxis_retry" in call
+    assert call["_praxis_retry"]["max_attempts"] == 3
+
+
+def test_retry_block_produces_todo(tmp_path: Path) -> None:
+    project = _make_project_with_retry(tmp_path)
+    ir = build_ir(project)
+    hermes = translate_openclaw_to_hermes(ir)
+    skill = next(s for s in hermes.skills if s.name == "flaky")
+    assert any("_praxis_retry" in todo for todo in skill.todos)

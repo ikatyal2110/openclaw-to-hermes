@@ -1,0 +1,14 @@
+name: send_email
+description: "Send a notification email."
+runtime: http
+spec:
+  url: https://api.example.com/email
+  method: POST
+inputs:
+  - name: to
+    type: string
+  - name: body
+    type: string
+outputs:
+  - name: message_id
+    type: string

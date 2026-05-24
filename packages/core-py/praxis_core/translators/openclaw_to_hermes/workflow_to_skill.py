@@ -43,6 +43,7 @@ def _build_skill(ir: IRGraph, wf: Node) -> HermesSkill:
     prev_alias = "prev"
     conditional_steps: list[str] = []
     looping_steps: list[str] = []
+    retrying_steps: list[str] = []
 
     for step in raw_steps:
         if not isinstance(step, dict):
@@ -68,6 +69,11 @@ def _build_skill(ir: IRGraph, wf: Node) -> HermesSkill:
             # flag for human review.
             proc_entry["_praxis_for_each"] = step["for_each"]
             looping_steps.append(step_id)
+        if "retry" in step:
+            # OpenClaw retry policies often differ structurally from Hermes
+            # (max_attempts vs. retries, backoff styles, etc.) — preserve verbatim.
+            proc_entry["_praxis_retry"] = step["retry"]
+            retrying_steps.append(step_id)
         procedure.append(proc_entry)
         prev_alias = step_id
 
@@ -91,6 +97,11 @@ def _build_skill(ir: IRGraph, wf: Node) -> HermesSkill:
             f"Loop step(s) {', '.join(looping_steps)} preserved as `_praxis_for_each` — "
             "Hermes typically handles collections inside a tool; consider whether the loop "
             "should move into the tool implementation rather than the skill procedure."
+        )
+    if retrying_steps:
+        todos.append(
+            f"Retry policy on step(s) {', '.join(retrying_steps)} preserved as `_praxis_retry` — "
+            "OpenClaw retry keys (max_attempts, backoff, etc.) may differ from Hermes; verify and rename."
         )
 
     # Reflect webhook triggers in when_to_use

@@ -1,0 +1,30 @@
+flowchart LR
+    classDef portable fill:#d4f7d4,stroke:#1a7f1a
+    classDef partial fill:#fff3c4,stroke:#a87900
+    classDef needsReview fill:#ffd9b3,stroke:#a55a00
+    classDef unsupported fill:#f7c2c2,stroke:#8a1a1a
+
+    memory_store_recent_incidents_2864e4b7[("memory_store: recent_incidents")]
+    scheduler_incident_response__webhook_0_4dd09d43(("scheduler: incident_response__webhook_0"))
+    tool_classify_severity_18ffd580[/"tool: classify_severity"/]
+    tool_pagerduty_create_1b3d3b5e[/"tool: pagerduty_create"/]
+    tool_parse_alert_1622aebd[/"tool: parse_alert"/]
+    tool_send_email_47718914[/"tool: send_email"/]
+    workflow_incident_response_d0465068["workflow: incident_response"]
+
+    scheduler_incident_response__webhook_0_4dd09d43 ==> workflow_incident_response_d0465068
+    tool_classify_severity_18ffd580 -->|data| tool_pagerduty_create_1b3d3b5e
+    tool_pagerduty_create_1b3d3b5e -->|data| tool_send_email_47718914
+    tool_parse_alert_1622aebd -->|data| tool_classify_severity_18ffd580
+    workflow_incident_response_d0465068 --> tool_classify_severity_18ffd580
+    workflow_incident_response_d0465068 --> tool_pagerduty_create_1b3d3b5e
+    workflow_incident_response_d0465068 --> tool_parse_alert_1622aebd
+    workflow_incident_response_d0465068 --> tool_send_email_47718914
+
+    class memory_store_recent_incidents_2864e4b7 portable
+    class scheduler_incident_response__webhook_0_4dd09d43 partial
+    class tool_classify_severity_18ffd580 portable
+    class tool_pagerduty_create_1b3d3b5e portable
+    class tool_parse_alert_1622aebd portable
+    class tool_send_email_47718914 portable
+    class workflow_incident_response_d0465068 needsReview

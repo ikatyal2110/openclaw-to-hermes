@@ -212,6 +212,17 @@ def test_cli_migrate_unknown_target_exits_nonzero(sample_root: Path, tmp_path: P
     assert result.exit_code != 0
 
 
+def test_cli_migrate_dry_run_touches_no_disk(sample_root: Path, tmp_path: Path) -> None:
+    out = tmp_path / "would-not-exist"
+    result = runner.invoke(app, ["migrate", str(sample_root), "--out", str(out), "--dry-run"])
+    assert result.exit_code == 0
+    assert "Dry run" in result.output
+    assert "hermes/skills/" in result.output
+    assert "hermes/prompts/" in result.output
+    # The output directory must NOT have been created.
+    assert not out.exists()
+
+
 def test_cli_ir_validate_passes_for_generated_ir(sample_root: Path, tmp_path: Path) -> None:
     ir_path = tmp_path / "ir.json"
     runner.invoke(app, ["scan", str(sample_root), "--emit-ir", str(ir_path)])

@@ -1,0 +1,437 @@
+{
+  "diagnostics": [],
+  "edges": [
+    {
+      "from": "env.PAGERDUTY_TOKEN.3ee1472d",
+      "kind": "dependency",
+      "label": "env:PAGERDUTY_TOKEN",
+      "to": "tool.pagerduty_create.1b3d3b5e"
+    },
+    {
+      "from": "scheduler.incident_response__webhook_0.4dd09d43",
+      "kind": "trigger",
+      "label": "/alerts/incoming",
+      "to": "workflow.incident_response.d0465068"
+    },
+    {
+      "from": "tool.classify_severity.18ffd580",
+      "kind": "data",
+      "to": "tool.pagerduty_create.1b3d3b5e"
+    },
+    {
+      "from": "tool.pagerduty_create.1b3d3b5e",
+      "kind": "data",
+      "to": "tool.send_email.47718914"
+    },
+    {
+      "from": "tool.parse_alert.1622aebd",
+      "kind": "data",
+      "to": "tool.classify_severity.18ffd580"
+    },
+    {
+      "from": "workflow.incident_response.d0465068",
+      "kind": "control",
+      "label": "classify",
+      "to": "tool.classify_severity.18ffd580"
+    },
+    {
+      "from": "workflow.incident_response.d0465068",
+      "kind": "control",
+      "label": "page",
+      "to": "tool.pagerduty_create.1b3d3b5e"
+    },
+    {
+      "from": "workflow.incident_response.d0465068",
+      "kind": "control",
+      "label": "parse",
+      "to": "tool.parse_alert.1622aebd"
+    },
+    {
+      "from": "workflow.incident_response.d0465068",
+      "kind": "control",
+      "label": "notify",
+      "to": "tool.send_email.47718914"
+    }
+  ],
+  "nodes": [
+    {
+      "capabilities": [],
+      "id": "env.PAGERDUTY_TOKEN.3ee1472d",
+      "inputs": [],
+      "kind": "env",
+      "metadata": {
+        "classification": "secret",
+        "secret": true
+      },
+      "name": "PAGERDUTY_TOKEN",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Environment variable, passed through.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "env",
+        "source_file": ".env.example"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "id": "env.PAGERDUTY_URL.486c4143",
+      "inputs": [],
+      "kind": "env",
+      "metadata": {
+        "classification": "config",
+        "secret": false
+      },
+      "name": "PAGERDUTY_URL",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Environment variable, passed through.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "env",
+        "source_file": ".env.example"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "stateful"
+      ],
+      "id": "memory_store.recent_incidents.2864e4b7",
+      "inputs": [],
+      "kind": "memory_store",
+      "metadata": {
+        "spec": {
+          "key_type": "string",
+          "kind": "kv",
+          "ttl_seconds": 86400,
+          "value_type": "object"
+        }
+      },
+      "name": "recent_incidents",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "KV store \u2014 direct map.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "memory_store/kv",
+        "source_file": "memory/stores.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "user_facing"
+      ],
+      "id": "scheduler.incident_response__webhook_0.4dd09d43",
+      "inputs": [],
+      "kind": "scheduler",
+      "metadata": {
+        "path": "/alerts/incoming",
+        "trigger_kind": "webhook"
+      },
+      "name": "incident_response__webhook_0",
+      "outputs": [],
+      "portability": {
+        "blockers": [],
+        "rationale": "Webhook \u2014 Hermes side must wire its own HTTP listener; surfaced as a skill, not a schedule.",
+        "score": 0.5,
+        "tier": "partial"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "trigger/webhook",
+        "source_file": "workflows/incident_response.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [],
+      "description": "Classify an alert by severity using a rule table.",
+      "id": "tool.classify_severity.18ffd580",
+      "inputs": [
+        {
+          "name": "alert",
+          "required": true,
+          "type": "object"
+        }
+      ],
+      "kind": "tool",
+      "metadata": {
+        "config": {},
+        "kind": "tool",
+        "pure": true,
+        "runtime": "python"
+      },
+      "name": "classify_severity",
+      "outputs": [
+        {
+          "name": "classification",
+          "required": true,
+          "type": "object"
+        }
+      ],
+      "portability": {
+        "blockers": [],
+        "rationale": "Pure Python function \u2014 map to Hermes tool with a stub.",
+        "score": 0.8,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "plugin/tool",
+        "source_file": "plugins/classify_severity.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "http_callable",
+        "side_effecting"
+      ],
+      "description": "Create a PagerDuty incident via the v2 events API.",
+      "id": "tool.pagerduty_create.1b3d3b5e",
+      "inputs": [
+        {
+          "name": "token",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "summary",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "kind": "tool",
+      "metadata": {
+        "config": {},
+        "kind": "tool",
+        "pure": null,
+        "runtime": "http"
+      },
+      "name": "pagerduty_create",
+      "outputs": [
+        {
+          "name": "dedup_key",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "portability": {
+        "blockers": [],
+        "rationale": "HTTP tool \u2014 direct map.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "plugin/tool",
+        "source_file": "plugins/pagerduty_create.yaml"
+      },
+      "side_effects": [
+        {
+          "kind": "network"
+        }
+      ]
+    },
+    {
+      "capabilities": [],
+      "description": "Parse a raw alert payload into a structured shape.",
+      "id": "tool.parse_alert.1622aebd",
+      "inputs": [
+        {
+          "name": "payload",
+          "required": true,
+          "type": "object"
+        }
+      ],
+      "kind": "tool",
+      "metadata": {
+        "config": {},
+        "kind": "tool",
+        "pure": true,
+        "runtime": "python"
+      },
+      "name": "parse_alert",
+      "outputs": [
+        {
+          "name": "parsed",
+          "required": true,
+          "type": "object"
+        }
+      ],
+      "portability": {
+        "blockers": [],
+        "rationale": "Pure Python function \u2014 map to Hermes tool with a stub.",
+        "score": 0.8,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "plugin/tool",
+        "source_file": "plugins/parse_alert.yaml"
+      },
+      "side_effects": []
+    },
+    {
+      "capabilities": [
+        "http_callable",
+        "side_effecting"
+      ],
+      "description": "Send a notification email.",
+      "id": "tool.send_email.47718914",
+      "inputs": [
+        {
+          "name": "to",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "kind": "tool",
+      "metadata": {
+        "config": {},
+        "kind": "tool",
+        "pure": null,
+        "runtime": "http"
+      },
+      "name": "send_email",
+      "outputs": [
+        {
+          "name": "message_id",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "portability": {
+        "blockers": [],
+        "rationale": "HTTP tool \u2014 direct map.",
+        "score": 1.0,
+        "tier": "portable"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "plugin/tool",
+        "source_file": "plugins/send_email.yaml"
+      },
+      "side_effects": [
+        {
+          "kind": "network"
+        }
+      ]
+    },
+    {
+      "capabilities": [
+        "sequenceable",
+        "side_effecting",
+        "branchable"
+      ],
+      "description": "Triage incoming alerts, escalate by severity, and notify a fan-out of recipients with retries.",
+      "id": "workflow.incident_response.d0465068",
+      "inputs": [],
+      "intent": {
+        "confidence": 0.95,
+        "description": "Triage incoming alerts, escalate by severity, and notify a fan-out of recipients with retries.",
+        "evidence": [
+          "description field present"
+        ],
+        "source": "static"
+      },
+      "kind": "workflow",
+      "metadata": {
+        "has_branches": true,
+        "raw_steps": [
+          {
+            "id": "parse",
+            "plugin": "parse_alert",
+            "with": {
+              "payload": "${trigger.body}"
+            }
+          },
+          {
+            "id": "classify",
+            "plugin": "classify_severity",
+            "with": {
+              "alert": "${steps.parse.output}"
+            }
+          },
+          {
+            "id": "page",
+            "plugin": "pagerduty_create",
+            "retry": {
+              "backoff": "exponential",
+              "initial_delay_seconds": 2,
+              "max_attempts": 3
+            },
+            "when": "${steps.classify.output.severity == 'critical'}",
+            "with": {
+              "summary": "${steps.parse.output.summary}",
+              "token": "${env.PAGERDUTY_TOKEN}"
+            }
+          },
+          {
+            "for_each": "${steps.classify.output.subscribers}",
+            "id": "notify",
+            "plugin": "send_email",
+            "retry": {
+              "backoff": "linear",
+              "max_attempts": 2
+            },
+            "with": {
+              "body": "${steps.parse.output.summary}",
+              "to": "${item.email}"
+            }
+          }
+        ],
+        "triggers": [
+          {
+            "kind": "webhook",
+            "path": "/alerts/incoming"
+          }
+        ]
+      },
+      "name": "incident_response",
+      "outputs": [],
+      "portability": {
+        "blockers": [
+          "Conditional branches (`when:` clauses) \u2014 split into multiple skills.",
+          "Loop step \u2014 recommend a single tool that handles the collection."
+        ],
+        "rationale": "Workflow has constructs without a one-to-one Hermes mapping.",
+        "score": 0.4,
+        "tier": "needs_review"
+      },
+      "provenance": {
+        "framework": "openclaw",
+        "original_kind": "workflow",
+        "source_file": "workflows/incident_response.yaml"
+      },
+      "side_effects": []
+    }
+  ],
+  "praxis_ir_version": "0.1",
+  "project": {
+    "analyzed_at": "NORMALIZED",
+    "name": "branchy-fixture",
+    "source_framework": "openclaw",
+    "source_root": "NORMALIZED"
+  }
+}
