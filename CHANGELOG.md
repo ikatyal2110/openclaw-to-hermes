@@ -4,6 +4,17 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.11.0] — 2026-05-24
+
+### Added
+- **Hermes → IR analyzer.** Reads a Hermes project (the kind that `praxis migrate` emits) back into the IR. Pairs with the existing OpenClaw analyzer to make the IR truly bidirectional. Lives at `praxis_core/analyzers/hermes/` with per-kind analyzers for skills, tools, memory, schedules, and prompts.
+- **`praxis roundtrip <openclaw-path>`** — runs a full migration round-trip (openclaw → IR → Hermes files → IR) and reports which nodes survive vs. which are lost or renamed. Explains expected losses inline (env vars and services don't get separate Hermes files; webhook schedulers fold into the skill's `when_to_use`). `--json` for CI consumption.
+- **`praxis check --json`** — pre-flight validator now emits a machine-readable JSON document, mirroring the other `--json` modes. CI integrations can parse `{passed, errors, warnings, diagnostics}`.
+
+### Tests
+- 9 new tests: 7 for the Hermes analyzer (skill/tool/memory/prompt round-trip discovery, CONTROL edges, empty-dir tolerance, inner-vs-outer path), 2 for `praxis roundtrip`, 2 for `praxis check --json`.
+- Total: 177 tests passing.
+
 ## [0.10.0] — 2026-05-24
 
 ### Changed
@@ -154,7 +165,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.7.0...v0.8.0

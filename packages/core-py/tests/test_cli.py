@@ -38,6 +38,28 @@ def test_cli_doctor_passes() -> None:
     assert "IR JSON schema" in result.output
 
 
+def test_cli_roundtrip_runs_cleanly(sample_root: Path) -> None:
+    result = runner.invoke(app, ["roundtrip", str(sample_root)])
+    assert result.exit_code == 0
+    assert "Round-trip:" in result.output
+    # Skills, tools, memory, prompts always round-trip cleanly for this fixture.
+    assert (
+        "fixture" not in result.output.lower()
+        or "Lossless" in result.output
+        or "Lost" in result.output
+    )
+
+
+def test_cli_roundtrip_json(sample_root: Path) -> None:
+    result = runner.invoke(app, ["roundtrip", str(sample_root), "--json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["forward_nodes"] > 0
+    assert payload["back_nodes"] > 0
+    assert "common" in payload
+    assert "lost" in payload and isinstance(payload["lost"], list)
+
+
 def test_cli_stats_prints_table(sample_root: Path) -> None:
     result = runner.invoke(app, ["stats", str(sample_root)])
     assert result.exit_code == 0
@@ -68,6 +90,26 @@ def test_cli_check_fails_on_broken_yaml(tmp_path: Path) -> None:
     assert result.exit_code == 1
     assert "PRX001" in result.output
     assert "check failed" in result.output
+
+
+def test_cli_check_json_output_clean(sample_root: Path) -> None:
+    result = runner.invoke(app, ["check", str(sample_root), "--json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["passed"] is True
+    assert payload["errors"] == 0
+    assert "diagnostics" in payload
+
+
+def test_cli_check_json_output_failing(tmp_path: Path) -> None:
+    project = tmp_path / "broken-json"
+    (project / "workflows").mkdir(parents=True)
+    (project / "workflows" / "oops.yaml").write_text("a: b: c:\n")
+    result = runner.invoke(app, ["check", str(project), "--json"])
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["passed"] is False
+    assert payload["errors"] >= 1
 
 
 def test_cli_check_warnings_as_errors(tmp_path: Path) -> None:

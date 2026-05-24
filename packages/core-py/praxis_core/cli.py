@@ -12,7 +12,7 @@ from rich.table import Table
 from praxis_core import IR_VERSION, __version__
 from praxis_core.extract import extract_prompt_clusters, extract_repeated_sequences
 from praxis_core.ir import IRGraph
-from praxis_core.ir.models import Diagnostic, NodeKind
+from praxis_core.ir.models import Diagnostic, Node, NodeKind
 from praxis_core.pipeline import build_ir, ir_to_json, migrate
 from praxis_core.reports import render_extract_report, render_mermaid_graph, render_migration_report
 
@@ -333,6 +333,82 @@ def skills_extract(
 
 
 @app.command()
+def roundtrip(
+    path: Path = typer.Argument(
+        ..., exists=True, file_okay=False, dir_okay=True, help="OpenClaw project root."
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Print the round-trip report as JSON."),
+) -> None:
+    """Run a full migration round-trip and report which IR nodes survive.
+
+    Pipeline: openclaw → IR (forward) → Hermes files → IR (back). Then diff
+    the two IRs by (kind, name).
+
+    Some loss is expected by design: env vars and external services don't get
+    separate Hermes files (they're referenced inside skills); webhook schedulers
+    are absorbed into the target skill's `when_to_use`. The report shows which
+    forward-IR concepts the back-IR doesn't reconstruct, with a `lossy: true`
+    flag when that count is non-zero. Exit code is 0 either way — this is a
+    diagnostic, not a gate.
+    """
+    import tempfile
+
+    from praxis_core.analyzers.hermes import analyze_hermes_project
+
+    forward = build_ir(path)
+    with tempfile.TemporaryDirectory(prefix="praxis-rt-") as tmp:
+        out = Path(tmp)
+        migrate(path, out)
+        back = analyze_hermes_project(out)
+
+    fwd_keys = {(_node_kind(n), n.name) for n in forward.nodes}
+    back_keys = {(_node_kind(n), n.name) for n in back.nodes}
+    lost = sorted(fwd_keys - back_keys)
+    gained = sorted(back_keys - fwd_keys)
+    common = sorted(fwd_keys & back_keys)
+
+    payload = {
+        "forward_nodes": len(forward.nodes),
+        "back_nodes": len(back.nodes),
+        "common": len(common),
+        "lost": [{"kind": k, "name": n} for k, n in lost],
+        "gained": [{"kind": k, "name": n} for k, n in gained],
+        "lossy": bool(lost),
+    }
+
+    if json_output:
+        typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+        return
+
+    console.print(
+        f"Round-trip: openclaw → Hermes → IR.  forward={len(forward.nodes)}  back={len(back.nodes)}  common={len(common)}"
+    )
+    if lost:
+        console.print(f"[yellow]Lost {len(lost)} node(s) on the round-trip:[/yellow]")
+        from collections import defaultdict
+
+        by_kind: dict[str, list[str]] = defaultdict(list)
+        for kind, name in lost:
+            by_kind[kind].append(name)
+        for kind in sorted(by_kind):
+            console.print(f"  {kind}: {', '.join(by_kind[kind])}")
+        console.print(
+            "[dim]Some loss is expected: env vars and services don't get separate "
+            "Hermes files; webhook schedulers fold into the skill's when_to_use.[/dim]"
+        )
+    if gained:
+        console.print(f"[cyan]Gained {len(gained)} node(s) on the back-pass:[/cyan]")
+        for kind, name in gained:
+            console.print(f"  {kind}: {name}")
+    if not lost and not gained:
+        console.print("[green]Lossless round-trip.[/green]")
+
+
+def _node_kind(n: Node) -> str:
+    return n.kind if isinstance(n.kind, str) else n.kind.value
+
+
+@app.command()
 def stats(
     path: Path = typer.Argument(
         ..., exists=True, file_okay=False, dir_okay=True, help="Source project root."
@@ -406,6 +482,9 @@ def check(
     warnings_as_errors: bool = typer.Option(
         False, "--warnings-as-errors", "-W", help="Treat warning-level diagnostics as failures."
     ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Print diagnostics as a JSON document (for CI integrations)."
+    ),
 ) -> None:
     """Pre-flight validation. Exit 0 if clean, 1 if errors (or warnings with -W).
 
@@ -419,6 +498,21 @@ def check(
     errors = [d for d in ir.diagnostics if d.level == "error"]
     warns = [d for d in ir.diagnostics if d.level == "warn"]
     others = [d for d in ir.diagnostics if d.level not in ("error", "warn")]
+    failed = bool(errors) or (warnings_as_errors and bool(warns))
+
+    if json_output:
+        payload = {
+            "passed": not failed,
+            "errors": len(errors),
+            "warnings": len(warns),
+            "notes": len(others),
+            "warnings_as_errors": warnings_as_errors,
+            "diagnostics": [d.model_dump(mode="json") for d in ir.diagnostics],
+        }
+        typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+        if failed:
+            raise typer.Exit(1)
+        return
 
     def _print_group(name: str, color: str, items: list[Diagnostic], sym: str) -> None:
         if not items:
@@ -435,7 +529,6 @@ def check(
     _print_group("warning(s)", "yellow", warns, "!")
     _print_group("note(s)", "cyan", others, "•")
 
-    failed = bool(errors) or (warnings_as_errors and bool(warns))
     if failed:
         console.print(f"[red]check failed[/red] — {len(errors)} error(s), {len(warns)} warning(s).")
         raise typer.Exit(1)
