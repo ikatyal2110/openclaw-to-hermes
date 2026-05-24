@@ -123,13 +123,48 @@ Three issue templates are the most useful:
 
 ## Release process
 
-We use semantic versioning. To cut a release:
+We use semantic versioning. The release helper at [`scripts/release.sh`](scripts/release.sh) automates the boring parts.
+
+### Pre-release checklist
 
 1. Move the `## [Unreleased]` section in `CHANGELOG.md` under a new `## [X.Y.Z] — YYYY-MM-DD` heading.
-2. Bump `__version__` in `packages/core-py/praxis_core/__init__.py` and `version` in `pyproject.toml`.
-3. Commit `release: vX.Y.Z`.
-4. Tag: `git tag vX.Y.Z && git push --tags`.
-5. Create a GitHub release using the CHANGELOG entry as the body.
+2. Update README's roadmap section if the release closes a roadmap item.
+3. Confirm the local gate is clean (`scripts/release.sh` will re-check, but failing early saves time):
+   ```bash
+   cd packages/core-py
+   ruff check . && ruff format --check . && mypy praxis_core && pytest -q
+   ```
+
+### Cutting the release
+
+```bash
+# Dry — bumps version, runs gate, builds artifacts, commits, tags, pushes.
+scripts/release.sh 0.12.0
+
+# Same plus PyPI upload (requires PYPI_TOKEN or ~/.pypirc).
+scripts/release.sh 0.12.0 --pypi
+```
+
+### After the script finishes
+
+Create the GitHub release with the CHANGELOG entry as the body. The script prints the exact `gh` command to run.
+
+### PyPI publishing (when ready)
+
+The package is **not yet on PyPI** as of v0.11 — install is still from-clone. The first PyPI publish needs:
+
+1. A PyPI account and a token scoped to the `praxis-core` project name.
+2. The token set as `PYPI_TOKEN` in your environment or in `~/.pypirc`.
+3. Reserve the name on TestPyPI first to verify the package metadata renders correctly:
+   ```bash
+   cd packages/core-py
+   python3 -m build
+   python3 -m twine upload --repository testpypi dist/*
+   pip install --index-url https://test.pypi.org/simple/ praxis-core
+   ```
+4. Once that round-trips, `scripts/release.sh <version> --pypi` does the real upload.
+
+Until the first publish lands, install instructions in the README direct users to clone the repo and run `pip install -e packages/core-py`.
 
 ## Code of conduct
 
