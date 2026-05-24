@@ -174,6 +174,7 @@ praxis --version                              Print version + IR schema version
 praxis doctor                                 Sanity-check the local install
 praxis init <path>                            Scaffold a starter OpenClaw project
 praxis stats <path> [--json]                  At-a-glance project analytics
+praxis bench <path> [--iter N] [--json]       Performance benchmark
 
 # Read-only analysis
 praxis scan <path> [--emit-ir FILE] [--json]  Walk repo, summary table or JSON
@@ -186,9 +187,10 @@ praxis check <path> [-W] [--json]             CI-friendly validator (exit 1 on e
 praxis roundtrip <path> [--json]              Forward+back migration; reports lossy nodes
 
 # Translation
-praxis migrate <path> --target hermes --out <dir> [--dry-run]
+praxis migrate <path> --target hermes --out <dir> [--dry-run] [--force]
                                               Emit Hermes project + report + graph + IR
-                                              --dry-run prints the manifest without writing files
+                                              --dry-run prints the manifest without writing
+                                              --force overwrites a non-empty --out (refused by default)
 
 # IR utilities
 praxis ir validate <file>                     Lint IR against schema
@@ -210,11 +212,12 @@ For a step-by-step first-day walkthrough on a real project, see [`docs/migrating
 - **v0.8.** Expanded memory store classifier (Redis/Memcached portable, SQL/Postgres/MySQL partial via wrapper tool, SQLite/DynamoDB/S3 needs_review). Richer rule-based intent inference.
 - **v0.9.** Expanded plugin runtime classifier (20+ runtimes including docker/lambda/grpc/graphql/shell/multi-language). `praxis ir to-mermaid` for offline graph rendering.
 - **v0.10.** Cleaner Hermes emission — `_praxis` metadata block dropped on portable, high-confidence skills so they look hand-written.
-- **v0.11 (current).** Hermes → IR analyzer (round-trip!). `praxis roundtrip` command for validating which nodes survive forward→back. `praxis check --json` for CI.
-- **v0.12.** LLM-assisted intent inference with content-addressed caching.
-- **v0.13.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
-- **v0.14.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
-- **v0.15.** VS Code extension surfacing the migration report as inline annotations.
+- **v0.11.** Hermes → IR analyzer (round-trip!). `praxis roundtrip` command for validating which nodes survive forward→back. `praxis check --json` for CI.
+- **v0.12 (current).** `praxis migrate --force` (refuses to clobber non-empty `--out` by default). `praxis bench` for perf testing. Backend-authoring guide + release script + PyPI publishing prep.
+- **v0.13.** LLM-assisted intent inference with content-addressed caching.
+- **v0.14.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
+- **v0.15.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
+- **v0.16.** VS Code extension surfacing the migration report as inline annotations.
 - **v1.0.** Stable IR. Backend authoring guide. Public benchmark fixture suite. PyPI release.
 
 ## Contributing

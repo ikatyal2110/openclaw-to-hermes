@@ -254,6 +254,41 @@ def test_cli_migrate_unknown_target_exits_nonzero(sample_root: Path, tmp_path: P
     assert result.exit_code != 0
 
 
+def test_cli_migrate_refuses_to_overwrite_non_empty_out(sample_root: Path, tmp_path: Path) -> None:
+    out = tmp_path / "occupied"
+    out.mkdir()
+    (out / "important.yaml").write_text("hand-written: do not delete\n")
+    result = runner.invoke(app, ["migrate", str(sample_root), "--out", str(out)])
+    assert result.exit_code == 1
+    assert "Refusing to overwrite" in result.output
+    # The user's file survives.
+    assert (out / "important.yaml").read_text() == "hand-written: do not delete\n"
+
+
+def test_cli_migrate_force_allows_overwrite(sample_root: Path, tmp_path: Path) -> None:
+    out = tmp_path / "occupied"
+    out.mkdir()
+    (out / "stale.txt").write_text("old\n")
+    result = runner.invoke(app, ["migrate", str(sample_root), "--out", str(out), "--force"])
+    assert result.exit_code == 0
+    assert (out / "MIGRATION_REPORT.md").exists()
+
+
+def test_cli_bench_runs_with_iterations(sample_root: Path) -> None:
+    result = runner.invoke(app, ["bench", str(sample_root), "--iter", "2"])
+    assert result.exit_code == 0
+    assert "praxis bench" in result.output
+    assert "build_ir" in result.output
+
+
+def test_cli_bench_json(sample_root: Path) -> None:
+    result = runner.invoke(app, ["bench", str(sample_root), "--iter", "2", "--json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["iterations"] == 2
+    assert "build_ir" in payload and "min_ms" in payload["build_ir"]
+
+
 def test_cli_migrate_dry_run_touches_no_disk(sample_root: Path, tmp_path: Path) -> None:
     out = tmp_path / "would-not-exist"
     result = runner.invoke(app, ["migrate", str(sample_root), "--out", str(out), "--dry-run"])

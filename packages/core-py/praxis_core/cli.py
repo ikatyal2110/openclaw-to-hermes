@@ -146,11 +146,23 @@ def migrate_cmd(
         "--dry-run",
         help="Build the IR and translate, but print the manifest of files that would be written instead of touching disk.",
     ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Allow overwriting an existing non-empty output directory. Without this, migrate refuses to clobber.",
+    ),
 ) -> None:
     """Translate the project to the target framework. Writes files + report + IR."""
     if target != "hermes":
         console.print(f"[red]Target '{target}' not supported in v0.1. Use 'hermes'.[/red]")
         raise typer.Exit(2)
+    # Safety: don't silently overwrite a user's existing work.
+    if not dry_run and out.exists() and any(out.iterdir()) and not force:
+        console.print(
+            f"[red]Refusing to overwrite non-empty directory {out}.[/red] "
+            "Pass --force to overwrite, or pick a different --out path."
+        )
+        raise typer.Exit(1)
     if dry_run:
         from praxis_core.pipeline import build_ir as _build_ir
         from praxis_core.translators import translate_openclaw_to_hermes as _translate
@@ -330,6 +342,87 @@ def skills_extract(
             encoding="utf-8",
         )
         console.print(f"[dim]Report written to {report}[/dim]")
+
+
+@app.command()
+def bench(
+    path: Path = typer.Argument(
+        ..., exists=True, file_okay=False, dir_okay=True, help="Source project root."
+    ),
+    iterations: int = typer.Option(
+        5, "--iter", min=1, max=100, help="Number of timing iterations."
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Print timings as JSON."),
+) -> None:
+    """Benchmark the pipeline on a project: scan, full IR build, full migrate.
+
+    Useful for catching performance regressions before they bite a real user's
+    50-workflow project. Iterations smooth out noise; the wall-clock min is the
+    headline metric.
+    """
+    import statistics
+    import tempfile
+    import time
+
+    scan_times: list[float] = []
+    build_times: list[float] = []
+    migrate_times: list[float] = []
+
+    for _ in range(iterations):
+        t0 = time.perf_counter()
+        ir = build_ir(path)
+        t1 = time.perf_counter()
+        build_times.append(t1 - t0)
+
+        t0 = time.perf_counter()
+        ir_to_json(ir)
+        t1 = time.perf_counter()
+        scan_times.append(t1 - t0)
+
+        with tempfile.TemporaryDirectory(prefix="praxis-bench-") as tmp:
+            t0 = time.perf_counter()
+            migrate(path, Path(tmp))
+            t1 = time.perf_counter()
+            migrate_times.append(t1 - t0)
+
+    def _stats(samples: list[float]) -> dict[str, float]:
+        return {
+            "min_ms": round(min(samples) * 1000, 2),
+            "median_ms": round(statistics.median(samples) * 1000, 2),
+            "max_ms": round(max(samples) * 1000, 2),
+        }
+
+    from typing import Any as _Any
+
+    result: dict[str, _Any] = {
+        "iterations": iterations,
+        "node_count": len(build_ir(path).nodes),
+        "build_ir": _stats(build_times),
+        "ir_to_json": _stats(scan_times),
+        "migrate": _stats(migrate_times),
+    }
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2, sort_keys=True))
+        return
+
+    table = Table(title=f"praxis bench ({iterations} iter, {result['node_count']} nodes)")
+    table.add_column("Stage")
+    table.add_column("min (ms)", justify="right")
+    table.add_column("median (ms)", justify="right")
+    table.add_column("max (ms)", justify="right")
+    for stage, stats in (
+        ("build_ir (scan + analyze + resolve + score)", result["build_ir"]),
+        ("ir_to_json (serialize)", result["ir_to_json"]),
+        ("migrate (full pipeline + emit)", result["migrate"]),
+    ):
+        table.add_row(
+            stage,
+            str(stats["min_ms"]),
+            str(stats["median_ms"]),
+            str(stats["max_ms"]),
+        )
+    console.print(table)
 
 
 @app.command()

@@ -4,6 +4,22 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.12.0] — 2026-05-24
+
+### Added
+- **`praxis migrate --force`** — explicit opt-in for overwriting non-empty output directories.
+- **`praxis bench <path>`** — performance benchmark. Runs `build_ir`, `ir_to_json`, and full `migrate` for N iterations (default 5) and prints min/median/max latencies per stage. `--json` for CI tracking.
+- **`docs/authoring-a-backend.md`** — end-to-end guide for adding a third source/target framework (LangGraph, AutoGen, …) to Praxis. Covers analyzers, translators, emitters, NodeKind reuse rules, fixture locking, round-trip testing, IR stability.
+- **`scripts/release.sh`** — automates version bumping, CI gate, sdist+wheel build, optional PyPI upload, commit, tag, push. Documented in CONTRIBUTING.md § Release.
+- **PyPI publishing instructions** in CONTRIBUTING.md — first-time setup (TestPyPI dry-run, token scoping, etc.). Praxis isn't on PyPI yet; this is the path to changing that.
+
+### Changed
+- **BREAKING (CLI):** `praxis migrate` now **refuses** to overwrite a non-empty `--out` directory. Previously it would silently clobber colliding filenames (e.g. `hermes/skills/daily_digest.yaml`). Pass `--force` to opt in. `--dry-run` bypasses the check since it doesn't write.
+
+### Tests
+- 4 new CLI tests: refuses overwrite, force allows it, bench runs, bench JSON.
+- Total: 181 tests passing.
+
 ## [0.11.0] — 2026-05-24
 
 ### Added
@@ -165,7 +181,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.8.0...v0.9.0
