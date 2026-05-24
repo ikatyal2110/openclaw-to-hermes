@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose a new capability or improvement. Read CONTRIBUTING.md § "Decisions that need an ADR" first if this touches the IR, classifier, or extension points.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Praxis is small and opinionated. The bar for new features is "does this make a concrete migration cheaper or more trustworthy?" — please frame the proposal in those terms.
+
+        If your idea changes the IR shape, adds a new node `kind`/`capability`, or introduces a new source/target framework, an ADR is required. See [`CONTRIBUTING.md`](../CONTRIBUTING.md#decisions-that-need-an-adr).
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the migration scenario where the current tool falls short. Concrete user pain beats abstract design.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed solution
+      description: What should Praxis do differently? CLI shape, IR change, classifier rule, report section — be specific.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What did you try first, or what other tools handle this today?
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope checklist
+      options:
+        - label: This requires an IR schema change (additive)
+        - label: This requires an IR schema change (breaking — ADR needed)
+        - label: This adds a new node kind or capability (ADR needed)
+        - label: This adds an external dependency (ADR needed)
+        - label: This is purely additive (new CLI flag, new report section, etc.)

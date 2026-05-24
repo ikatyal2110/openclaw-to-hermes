@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Discussion
-    url: https://github.com/praxis-dev/praxis/discussions
+    url: https://github.com/ikatyal2110/openclaw-to-hermes/discussions
     about: Open-ended questions about migration strategy, the IR, or extending Praxis.
+  - name: Security advisory
+    url: https://github.com/ikatyal2110/openclaw-to-hermes/security/advisories/new
+    about: Privately report a vulnerability. Do not use a public issue.

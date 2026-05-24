@@ -1,0 +1,17 @@
+# Praxis CODEOWNERS — automatic review requests on PRs touching these areas.
+#
+# Anyone with merge rights can land a PR; CODEOWNERS just nudges the right reviewer.
+# Update when ownership genuinely changes — out-of-date owners are worse than no owners.
+
+# Default owner for everything.
+*       @ikatyal2110
+
+# The IR is the public contract — changes here always want a second pair of eyes.
+/schemas/praxis-ir.schema.json    @ikatyal2110
+/packages/core-py/praxis_core/ir/ @ikatyal2110
+
+# Classifier is the trust spine — tier definitions need careful review.
+/packages/core-py/praxis_core/scoring/ @ikatyal2110
+
+# ADRs anchor architectural decisions; reviewers should be aware of new ones.
+/docs/adr/      @ikatyal2110
