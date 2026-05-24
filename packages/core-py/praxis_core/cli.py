@@ -206,6 +206,23 @@ def ir_validate(
     )
 
 
+@ir_app.command("to-mermaid")
+def ir_to_mermaid(
+    file: Path = typer.Argument(..., exists=True, dir_okay=False, help="IR JSON file."),
+) -> None:
+    """Render a Mermaid graph from a saved IR file.
+
+    The non-IR equivalent is `praxis graph <project> --format mermaid`. Use this
+    when you only have the IR (e.g. one emitted from `praxis scan ... --emit-ir`)
+    and don't want to re-walk the source project.
+    """
+    from praxis_core.ir import IRGraph
+
+    data = json.loads(file.read_text(encoding="utf-8"))
+    ir = IRGraph.model_validate(data)
+    typer.echo(render_mermaid_graph(ir))
+
+
 @ir_app.command("diff")
 def ir_diff(
     a: Path = typer.Argument(..., exists=True, dir_okay=False),

@@ -186,7 +186,7 @@
       ],
       "portability": {
         "blockers": [],
-        "rationale": "Pure Python function \u2014 map to Hermes tool with a stub.",
+        "rationale": "Pure python function \u2014 map to a Hermes tool with a stub.",
         "score": 0.8,
         "tier": "portable"
       },
@@ -276,7 +276,7 @@
       ],
       "portability": {
         "blockers": [],
-        "rationale": "Pure Python function \u2014 map to Hermes tool with a stub.",
+        "rationale": "Pure python function \u2014 map to a Hermes tool with a stub.",
         "score": 0.8,
         "tier": "portable"
       },

@@ -4,6 +4,23 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-05-24
+
+### Added
+- **Expanded plugin runtime classifier.** Was 3 known runtimes (http/python/subprocess); now 20+:
+  - **portable**: http, https, rest, plus pure functions in python/node/javascript/typescript/go/rust/java/ruby.
+  - **partial**: docker/oci/container, lambda/cloud_function/faas, shell/bash/subprocess/exec/cli — each with hosting/wrapping blockers.
+  - **needs_review**: impure compiled-language plugins, grpc/graphql/thrift — each with schema/protocol-bridging blockers.
+- **`praxis ir to-mermaid <ir.json>`** — render a Mermaid graph directly from a saved IR file, no source project required. Useful for offline visualization and CI workflows that emit IR then render.
+
+### Changed
+- **BREAKING (classifier):** `runtime: subprocess` now classifies as `partial` (translatable via HTTP wrapper) instead of `unsupported`. Same change spirit as v0.8's SQL update.
+- Re-baselined `tools/fixtures/baseline/` and `tools/fixtures/branchy/` for new intent-inference and classifier behavior.
+
+### Tests
+- 9 new tests (subprocess-now-partial, docker, lambda, grpc, graphql, https, pure-node-portable, impure-go-needs-review, ir to-mermaid).
+- Total: 163 tests passing.
+
 ## [0.8.0] — 2026-05-24
 
 ### Added
@@ -127,7 +144,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.5.0...v0.6.0

@@ -716,9 +716,9 @@
       ],
       "portability": {
         "blockers": [
-          "Confirm side-effect surface; either declare `pure: true` or wrap as HTTP."
+          "Confirm side-effect surface for the python plugin; either declare `pure: true` or wrap as an HTTP service."
         ],
-        "rationale": "Impure Python plugin \u2014 review side effects before porting.",
+        "rationale": "Impure python plugin \u2014 review side effects before porting.",
         "score": 0.4,
         "tier": "needs_review"
       },

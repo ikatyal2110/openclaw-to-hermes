@@ -98,30 +98,104 @@ def _classify_tool(node: Node, meta: dict[str, Any]) -> Portability:
                 "Router has no one-to-one Hermes mapping; review the generated skill's `when_to_use`."
             ],
         )
-    if runtime == "http":
+
+    # HTTP and HTTP-equivalent network runtimes — direct map to a Hermes HTTP tool.
+    if runtime in ("http", "https", "rest"):
         return Portability(
-            score=1.0, tier=PortabilityTier.PORTABLE, rationale="HTTP tool — direct map."
+            score=1.0,
+            tier=PortabilityTier.PORTABLE,
+            rationale=f"{runtime.upper()} tool — direct map.",
         )
-    if runtime == "python":
+
+    # Compiled-language pure functions follow the same rule as Python.
+    if runtime in (
+        "python",
+        "node",
+        "nodejs",
+        "javascript",
+        "typescript",
+        "go",
+        "rust",
+        "java",
+        "ruby",
+    ):
         if meta.get("pure"):
             return Portability(
                 score=0.8,
                 tier=PortabilityTier.PORTABLE,
-                rationale="Pure Python function — map to Hermes tool with a stub.",
+                rationale=f"Pure {runtime} function — map to a Hermes tool with a stub.",
             )
         return Portability(
             score=0.4,
             tier=PortabilityTier.NEEDS_REVIEW,
-            rationale="Impure Python plugin — review side effects before porting.",
-            blockers=["Confirm side-effect surface; either declare `pure: true` or wrap as HTTP."],
+            rationale=f"Impure {runtime} plugin — review side effects before porting.",
+            blockers=[
+                f"Confirm side-effect surface for the {runtime} plugin; either declare `pure: true` "
+                "or wrap as an HTTP service.",
+            ],
         )
-    if runtime == "subprocess":
+
+    # Container-based runtimes — translatable but the container needs hosting.
+    if runtime in ("docker", "oci", "container"):
         return Portability(
-            score=0.0,
-            tier=PortabilityTier.UNSUPPORTED,
-            rationale="Subprocess plugins have no native Hermes primitive.",
-            blockers=["Wrap as HTTP service or eliminate."],
+            score=0.5,
+            tier=PortabilityTier.PARTIAL,
+            rationale=(
+                f"{runtime.capitalize()} runtime — Hermes invokes tools via HTTP. Stand the "
+                "container up behind an HTTP endpoint and reference it as an http tool."
+            ),
+            blockers=[
+                "Where will the container run on the Hermes side (Kubernetes, ECS, Cloud Run)?",
+                "Surface the container as an HTTP endpoint and update the tool spec.",
+            ],
         )
+
+    # Serverless runtimes — usually already HTTP-addressable.
+    if runtime in ("lambda", "cloud_function", "cloud-function", "function", "faas"):
+        return Portability(
+            score=0.7,
+            tier=PortabilityTier.PARTIAL,
+            rationale=(
+                f"{runtime} — most serverless platforms expose an HTTP trigger. Wire the "
+                "function URL as the tool's HTTP endpoint."
+            ),
+            blockers=[
+                "Confirm the function has an HTTP/URL trigger enabled.",
+                "Move any in-runtime secrets to the Hermes secrets store.",
+            ],
+        )
+
+    # RPC and structured-network runtimes — need protocol bridging.
+    if runtime in ("grpc", "graphql", "thrift"):
+        return Portability(
+            score=0.4,
+            tier=PortabilityTier.NEEDS_REVIEW,
+            rationale=(
+                f"{runtime.upper()} runtime — Hermes invokes HTTP tools; you'll need either an "
+                "HTTP gateway or a wrapper tool that translates."
+            ),
+            blockers=[
+                f"Choose: gateway in front of the {runtime} service, or hand-written HTTP wrapper.",
+                "Map the request/response schema into the tool's inputs/outputs.",
+            ],
+        )
+
+    # Shell/local-process runtimes — same risk profile as the old `subprocess`.
+    if runtime in ("shell", "bash", "subprocess", "exec", "cli"):
+        return Portability(
+            score=0.2,
+            tier=PortabilityTier.PARTIAL,
+            rationale=(
+                f"{runtime} runtime — host-local execution doesn't translate; wrap as an HTTP "
+                "service that runs the same command in a controlled environment."
+            ),
+            blockers=[
+                "Wrap as an HTTP service or eliminate the host-local dependency.",
+                "Consider security: the service exposes whatever the shell command can do.",
+            ],
+        )
+
+    # No runtime declared but side effects exist — needs disambiguation.
     if any(
         se.kind == SideEffectKind.UNKNOWN.value or se.kind == SideEffectKind.UNKNOWN
         for se in node.side_effects
@@ -129,8 +203,14 @@ def _classify_tool(node: Node, meta: dict[str, Any]) -> Portability:
         return Portability(
             score=0.3, tier=PortabilityTier.NEEDS_REVIEW, rationale="Unknown side-effect surface."
         )
+
     return Portability(
-        score=0.5, tier=PortabilityTier.PARTIAL, rationale=f"Runtime {runtime!r} not recognized."
+        score=0.5,
+        tier=PortabilityTier.PARTIAL,
+        rationale=f"Runtime {runtime!r} not recognized — Praxis doesn't have a classifier rule for it.",
+        blockers=[
+            f"Declare a known runtime ({runtime} → http/python/docker/lambda/grpc/…) or open an issue.",
+        ],
     )
 
 

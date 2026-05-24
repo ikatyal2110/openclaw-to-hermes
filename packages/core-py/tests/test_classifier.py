@@ -31,9 +31,47 @@ def test_impure_python_tool_needs_review() -> None:
     assert p.tier == "needs_review"
 
 
-def test_subprocess_tool_is_unsupported() -> None:
+def test_subprocess_tool_is_partial_via_wrapper() -> None:
+    """v0.9: subprocess/shell runtimes are translatable via HTTP wrapper, not unsupported."""
     p = _classify(_node(NodeKind.TOOL, runtime="subprocess", kind="tool"))
-    assert p.tier == "unsupported"
+    assert p.tier == "partial"
+    assert p.blockers
+
+
+def test_docker_tool_is_partial() -> None:
+    p = _classify(_node(NodeKind.TOOL, runtime="docker", kind="tool"))
+    assert p.tier == "partial"
+    assert any("HTTP" in b or "Kubernetes" in b for b in p.blockers)
+
+
+def test_lambda_tool_is_partial() -> None:
+    p = _classify(_node(NodeKind.TOOL, runtime="lambda", kind="tool"))
+    assert p.tier == "partial"
+
+
+def test_grpc_tool_needs_review() -> None:
+    p = _classify(_node(NodeKind.TOOL, runtime="grpc", kind="tool"))
+    assert p.tier == "needs_review"
+
+
+def test_graphql_tool_needs_review() -> None:
+    p = _classify(_node(NodeKind.TOOL, runtime="graphql", kind="tool"))
+    assert p.tier == "needs_review"
+
+
+def test_node_pure_tool_is_portable() -> None:
+    p = _classify(_node(NodeKind.TOOL, runtime="node", kind="tool", pure=True))
+    assert p.tier == "portable"
+
+
+def test_go_impure_tool_needs_review() -> None:
+    p = _classify(_node(NodeKind.TOOL, runtime="go", kind="tool", pure=False))
+    assert p.tier == "needs_review"
+
+
+def test_https_tool_is_portable() -> None:
+    p = _classify(_node(NodeKind.TOOL, runtime="https", kind="tool"))
+    assert p.tier == "portable"
 
 
 def test_router_tool_is_partial() -> None:

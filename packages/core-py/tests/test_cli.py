@@ -230,6 +230,16 @@ def test_cli_ir_validate_passes_for_generated_ir(sample_root: Path, tmp_path: Pa
     assert result.exit_code == 0
 
 
+def test_cli_ir_to_mermaid(sample_root: Path, tmp_path: Path) -> None:
+    ir_path = tmp_path / "ir.json"
+    scan = runner.invoke(app, ["scan", str(sample_root), "--emit-ir", str(ir_path)])
+    assert scan.exit_code == 0
+    result = runner.invoke(app, ["ir", "to-mermaid", str(ir_path)])
+    assert result.exit_code == 0
+    assert result.output.startswith("flowchart LR")
+    assert "classDef portable" in result.output
+
+
 def test_cli_ir_diff_detects_no_change(sample_root: Path, tmp_path: Path) -> None:
     a = tmp_path / "a.json"
     b = tmp_path / "b.json"
