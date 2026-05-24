@@ -4,6 +4,17 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-05-24
+
+### Added
+- **`retry:` block preservation in translation** — completes the `when:` / `for_each` / `retry:` trio. Workflow steps with `retry:` policies now carry them through into the generated Hermes skill as `_praxis_retry`, with a TODO noting OpenClaw and Hermes retry keys may differ in name (max_attempts vs. retries, etc.).
+- **`praxis migrate --dry-run`** — previews the file manifest (skills/tools/schedules/memory/prompts with correct extensions) without touching disk. Useful for review before committing the output, or for CI dry-runs.
+- **`tools/fixtures/branchy/`** — second golden-file fixture, deliberately non-trivial. Exercises `when:`, `for_each`, `retry:`, webhook trigger, secret env var, and KV memory in one project. Locked by `tests/test_fixtures_branchy.py` with 4 regression assertions.
+
+### Tests
+- 7 new tests: 2 for `retry:` preservation, 1 for `--dry-run`, 4 for the branchy fixture.
+- Total: 142 tests passing.
+
 ## [0.6.0] — 2026-05-23
 
 ### Added
@@ -103,7 +114,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.3.0...v0.4.0
