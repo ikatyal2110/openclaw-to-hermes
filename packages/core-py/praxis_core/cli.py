@@ -14,7 +14,12 @@ from praxis_core.extract import extract_prompt_clusters, extract_repeated_sequen
 from praxis_core.ir import IRGraph
 from praxis_core.ir.models import Diagnostic, Node, NodeKind
 from praxis_core.pipeline import build_ir, ir_to_json, migrate
-from praxis_core.reports import render_extract_report, render_mermaid_graph, render_migration_report
+from praxis_core.reports import (
+    render_dot_graph,
+    render_extract_report,
+    render_mermaid_graph,
+    render_migration_report,
+)
 
 app = typer.Typer(
     name="praxis",
@@ -112,16 +117,23 @@ def _tier_counts(ir: IRGraph) -> dict[str, int]:
 @app.command()
 def graph(
     path: Path = typer.Argument(..., exists=True, file_okay=False, dir_okay=True),
-    format: str = typer.Option("mermaid", "--format", help="mermaid | json"),
+    format: str = typer.Option("mermaid", "--format", help="mermaid | dot | json"),
 ) -> None:
-    """Render the architecture graph."""
+    """Render the architecture graph.
+
+    mermaid → paste into https://mermaid.live or use a Mermaid VS Code preview.
+    dot     → pipe through `dot -Tsvg > arch.svg` (requires Graphviz).
+    json    → the raw IR (same as `praxis scan --emit-ir`).
+    """
     ir = build_ir(path)
     if format == "mermaid":
         typer.echo(render_mermaid_graph(ir))
+    elif format == "dot":
+        typer.echo(render_dot_graph(ir))
     elif format == "json":
         typer.echo(ir_to_json(ir))
     else:
-        console.print(f"[red]Unknown format: {format}[/red]")
+        console.print(f"[red]Unknown format: {format}[/red] (expected mermaid | dot | json)")
         raise typer.Exit(2)
 
 

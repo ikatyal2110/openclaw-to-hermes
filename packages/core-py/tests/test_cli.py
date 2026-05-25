@@ -227,6 +227,23 @@ def test_cli_graph_mermaid_format(sample_root: Path) -> None:
     assert result.output.startswith("flowchart LR")
 
 
+def test_cli_graph_dot_format(sample_root: Path) -> None:
+    result = runner.invoke(app, ["graph", str(sample_root), "--format", "dot"])
+    assert result.exit_code == 0
+    assert result.output.startswith("digraph praxis")
+    assert "rankdir=LR" in result.output
+    # Spot-check that a known node appears, in the expected DOT syntax.
+    assert 'label="tool: fetch_articles"' in result.output
+
+
+def test_cli_graph_json_format(sample_root: Path) -> None:
+    result = runner.invoke(app, ["graph", str(sample_root), "--format", "json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["praxis_ir_version"] == "0.1"
+    assert payload["nodes"]
+
+
 def test_cli_graph_unknown_format_exits_nonzero(sample_root: Path) -> None:
     result = runner.invoke(app, ["graph", str(sample_root), "--format", "bogus"])
     assert result.exit_code != 0

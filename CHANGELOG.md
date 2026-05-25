@@ -4,6 +4,16 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [0.13.0] — 2026-05-24
+
+### Added
+- **`praxis graph --format dot`** — Graphviz DOT renderer alongside the existing Mermaid renderer. Pipe through `dot -Tsvg > arch.svg` or `dot -Tpng > arch.png`. Same shape/color conventions as Mermaid (per-tier fills, per-kind shapes). Closes the "good first issue" from earlier README versions.
+- Per-format docstring on `praxis graph` explaining what each format is for.
+
+### Tests
+- 2 new CLI tests: graph --format dot, graph --format json.
+- Total: 183 tests passing.
+
 ## [0.12.0] — 2026-05-24
 
 ### Added
@@ -181,7 +191,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.9.0...v0.10.0

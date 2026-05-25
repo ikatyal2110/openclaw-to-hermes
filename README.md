@@ -178,7 +178,7 @@ praxis bench <path> [--iter N] [--json]       Performance benchmark
 
 # Read-only analysis
 praxis scan <path> [--emit-ir FILE] [--json]  Walk repo, summary table or JSON
-praxis graph <path> --format mermaid          Architecture graph
+praxis graph <path> --format mermaid|dot|json Architecture graph
 praxis report <path>                          Migration playbook (Markdown)
 praxis explain <path> <node> [--json]         Drill into one node
 praxis skills extract <path> [--threshold N] [--report FILE]
@@ -213,11 +213,12 @@ For a step-by-step first-day walkthrough on a real project, see [`docs/migrating
 - **v0.9.** Expanded plugin runtime classifier (20+ runtimes including docker/lambda/grpc/graphql/shell/multi-language). `praxis ir to-mermaid` for offline graph rendering.
 - **v0.10.** Cleaner Hermes emission — `_praxis` metadata block dropped on portable, high-confidence skills so they look hand-written.
 - **v0.11.** Hermes → IR analyzer (round-trip!). `praxis roundtrip` command for validating which nodes survive forward→back. `praxis check --json` for CI.
-- **v0.12 (current).** `praxis migrate --force` (refuses to clobber non-empty `--out` by default). `praxis bench` for perf testing. Backend-authoring guide + release script + PyPI publishing prep.
-- **v0.13.** LLM-assisted intent inference with content-addressed caching.
-- **v0.14.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
-- **v0.15.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
-- **v0.16.** VS Code extension surfacing the migration report as inline annotations.
+- **v0.12.** `praxis migrate --force` (refuses to clobber non-empty `--out` by default). `praxis bench` for perf testing. Backend-authoring guide + release script + PyPI publishing prep.
+- **v0.13 (current).** `praxis graph --format dot` (Graphviz output alongside Mermaid).
+- **v0.14.** LLM-assisted intent inference with content-addressed caching.
+- **v0.15.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
+- **v0.16.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
+- **v0.17.** VS Code extension surfacing the migration report as inline annotations.
 - **v1.0.** Stable IR. Backend authoring guide. Public benchmark fixture suite. PyPI release.
 
 ## Contributing
@@ -225,9 +226,9 @@ For a step-by-step first-day walkthrough on a real project, see [`docs/migrating
 See [`CONTRIBUTING.md`](CONTRIBUTING.md). The fastest way to make Praxis better is to add a fixture project to `tools/fixtures/` representing a real-world OpenClaw pattern that doesn't round-trip yet.
 
 Good first issues:
-- Add a `--format dot` option to `praxis graph` (currently only mermaid + json).
 - Extend the prompt tokenizer to recognize Hermes prompt placeholders.
-- Add support for OpenClaw retry/backoff blocks in `workflows.py`.
+- Add a fixture for a real OpenClaw project that doesn't round-trip yet (see `tools/fixtures/README.md`).
+- Add LangGraph as a third target (see [`docs/authoring-a-backend.md`](docs/authoring-a-backend.md)).
 
 ## License
 
