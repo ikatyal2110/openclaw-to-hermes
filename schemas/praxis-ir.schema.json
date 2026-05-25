@@ -9,8 +9,8 @@
   "properties": {
     "praxis_ir_version": {
       "type": "string",
-      "const": "0.1",
-      "description": "IR schema version. Breaking changes increment this; consumers must check."
+      "const": "1.0",
+      "description": "IR schema version. From 1.0 onward, the schema is additive-only within the 1.x line; breaking changes increment the major version."
     },
     "project": {
       "type": "object",

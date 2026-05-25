@@ -154,6 +154,7 @@ class Project(StrictModel):
 
 
 class IRGraph(StrictModel):
+    # praxis_ir_version is stable from 1.0 onward; additive-only within 1.x.
     praxis_ir_version: str = IR_VERSION
     project: Project | None = None
     nodes: list[Node] = Field(default_factory=list)

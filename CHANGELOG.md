@@ -4,6 +4,44 @@ All notable changes to Praxis are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-05-24
+
+**Praxis v1.0.0 — stability.**
+
+After 13 minor releases of additive change, this release commits to a stable
+contract. See [ADR-0003](docs/adr/0003-v1-stability-commitment.md) for the
+full commitment; the summary is: the IR schema, CLI surface, Python API, and
+diagnostic codes are **additive-only within the 1.x line**. Classifier verdicts,
+inferred intent prose, and generator output remain best-effort.
+
+### Changed
+- **`praxis_ir_version` bumped from `0.1` to `1.0`** in `praxis_core/__init__.py`, the JSON Schema, and every emitted `ir.json`. Re-baselined both golden fixtures. This is a one-time migration; consumers may pin `praxis-core~=1.0`.
+- **Schema description updated** to document the additive-only commitment.
+- **README "Status" and roadmap rewritten** for v1.0 framing. Hybrid bridge and third backends now appear as **1.x feature additions** (v1.2, v1.3) rather than future major versions.
+
+### Added
+- **[`docs/adr/0003-v1-stability-commitment.md`](docs/adr/0003-v1-stability-commitment.md)** — the formal stability commitment, what's frozen vs. evolving, alternatives considered.
+- **README § "Stability commitments (v1.0+)"** — user-facing summary.
+
+### What's in v1.0
+
+Cumulative across the v0.1 → v0.13 line, all under stability commitment:
+
+- **CLI** (17 commands): `scan`, `graph`, `report`, `migrate`, `explain`, `init`, `doctor`, `check`, `stats`, `bench`, `roundtrip`, `skills extract`, `ir validate`, `ir diff`, `ir to-mermaid`, `--version`, `-V`.
+- **Analyzers**: full OpenClaw → IR (workflows, plugins, prompts, memory, services, schedulers, env with secret classification, project metadata) and full Hermes → IR (skills, tools, memory, schedules, prompts).
+- **Translators**: OpenClaw → Hermes with construct preservation (`when:`, `for_each:`, `retry:` → `_praxis_when` / `_praxis_for_each` / `_praxis_retry` + TODOs).
+- **Emitter**: Hermes YAML with happy-path cleanliness (drops `_praxis` metadata for portable + zero-TODO skills).
+- **Classifier**: 4 tiers, 20+ runtimes, 13+ memory backends, all with actionable blockers.
+- **Reports**: Markdown migration playbook with checklist, secrets section, tier table, TODOs, diagnostics. Mermaid + DOT graphs.
+- **Skills extraction**: prompt clustering (Jaccard bigrams) + tool-sequence repetition (maximal subsequences).
+- **Pipeline**: scan → analyze → resolve → score → translate → emit. Robust error handling (PRX001/PRX002 diagnostics, never tracebacks on bad input).
+- **Tests**: 183 passing across 17 test files. Strict mypy, ruff lint + format, ajv JSON Schema validation in CI on Python 3.11/3.12.
+- **Fixtures**: 2 golden-file regression projects (baseline, branchy).
+- **Docs**: README, CHANGELOG, CONTRIBUTING, [architecture](docs/architecture.md), [ir-spec](docs/ir-spec.md), [migration-model](docs/migration-model.md), [openclaw-format](docs/openclaw-format.md), [hermes-format](docs/hermes-format.md), [skills-extract](docs/skills-extract.md), [migrating-real-projects](docs/migrating-real-projects.md), [authoring-a-backend](docs/authoring-a-backend.md), 3 ADRs.
+- **Repo hygiene**: Apache-2.0 LICENSE, NOTICE, SECURITY policy, CODE_OF_CONDUCT, 3 issue templates, CODEOWNERS, PR template, release script.
+
+PyPI publishing remains the one piece needing maintainer action; instructions live in [CONTRIBUTING.md § Release](CONTRIBUTING.md#release-process).
+
 ## [0.13.0] — 2026-05-24
 
 ### Added
@@ -191,7 +229,8 @@ Initial MVP. Analyzer, rule-based portability classifier, deterministic IR, Herm
 - ADR-0001 — Bidirectional IR scoped to OpenClaw ↔ Hermes only; no "universal IR" until a third backend forces generality.
 - ADR-0002 — Analyzer reads YAML manifests only, not source code.
 
-[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.13.0...v1.0.0
 [0.13.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/ikatyal2110/openclaw-to-hermes/compare/v0.10.0...v0.11.0

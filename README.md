@@ -23,7 +23,7 @@ Praxis reads your OpenClaw project, builds a typed intermediate representation, 
 
 ## Status
 
-**v0.5 — beta.** Production-quality CLI with `scan` / `graph` / `report` / `migrate` / `check` / `explain` / `skills extract` / `stats` / `doctor` / `init`. IR schema `0.1`, locked by a golden-file regression suite. 130+ tests, strict mypy in CI. Hybrid runtime and additional backends are deferred — see [Roadmap](#roadmap) and [`CHANGELOG.md`](CHANGELOG.md).
+**v1.0 — stable.** Production-ready CLI with 17 commands (scan / graph / report / migrate / explain / init / doctor / check / stats / bench / roundtrip / skills extract / ir validate / ir diff / ir to-mermaid / --version). IR schema `1.0` — stability commitment per [ADR-0003](docs/adr/0003-v1-stability-commitment.md). 180+ tests, strict mypy in CI, two golden-file regression fixtures. Hybrid runtime, LLM-assisted intent inference, and additional backends ship as 1.x feature additions — see [Roadmap](#roadmap) and [`CHANGELOG.md`](CHANGELOG.md).
 
 ## What Praxis is and isn't
 
@@ -129,7 +129,24 @@ The IR is the single contract on which everything else hangs. It is:
 - **Intent-bearing** — every workflow may carry a `description`, `confidence`, and `evidence`.
 - **Round-trippable** — every emitter has a partner analyzer; Hermes → IR → Hermes must converge.
 
-The IR is versioned in [`schemas/praxis-ir.schema.json`](schemas/praxis-ir.schema.json). Internal code can change; the IR can't break without a version bump. See [`docs/ir-spec.md`](docs/ir-spec.md).
+The IR is versioned in [`schemas/praxis-ir.schema.json`](schemas/praxis-ir.schema.json) (`praxis_ir_version: "1.0"` as of v1.0.0). Internal code can change; the IR can't break without a major-version bump. See [`docs/ir-spec.md`](docs/ir-spec.md) and [ADR-0003](docs/adr/0003-v1-stability-commitment.md).
+
+## Stability commitments (v1.0+)
+
+Within the 1.x line:
+
+- **IR JSON schema** is additive-only. New optional fields can appear; existing fields don't rename, remove, or narrow their type.
+- **CLI command names and primary arguments** are stable. New commands and flags may be added; existing ones don't change meaning.
+- **Python public API** (`praxis_core.{ir, analyzers, translators, emitters, scoring, reports, pipeline, extract}`) is stable.
+- **Diagnostic codes** (PRX001, PRX002, …) don't get reused for different meanings.
+
+**Not** stable (may shift in any minor release):
+- Specific classifier verdicts (e.g. whether `runtime: docker` is `partial` or `portable`) — the tier system is stable, individual verdicts evolve.
+- Inferred intent prose and confidence numbers — heuristics improve.
+- Generated `description` / `when_to_use` text and the `_praxis*` metadata block in emitted skills.
+- Mermaid / DOT renderer output.
+
+See [ADR-0003](docs/adr/0003-v1-stability-commitment.md) for the full commitment.
 
 ## How translation works
 
@@ -214,12 +231,13 @@ For a step-by-step first-day walkthrough on a real project, see [`docs/migrating
 - **v0.10.** Cleaner Hermes emission — `_praxis` metadata block dropped on portable, high-confidence skills so they look hand-written.
 - **v0.11.** Hermes → IR analyzer (round-trip!). `praxis roundtrip` command for validating which nodes survive forward→back. `praxis check --json` for CI.
 - **v0.12.** `praxis migrate --force` (refuses to clobber non-empty `--out` by default). `praxis bench` for perf testing. Backend-authoring guide + release script + PyPI publishing prep.
-- **v0.13 (current).** `praxis graph --format dot` (Graphviz output alongside Mermaid).
-- **v0.14.** LLM-assisted intent inference with content-addressed caching.
-- **v0.15.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
-- **v0.16.** Hybrid bridge, read-write. LangGraph as a third target — first chance to break the IR.
-- **v0.17.** VS Code extension surfacing the migration report as inline annotations.
-- **v1.0.** Stable IR. Backend authoring guide. Public benchmark fixture suite. PyPI release.
+- **v0.13.** `praxis graph --format dot` (Graphviz output alongside Mermaid).
+- **v1.0 (current).** Stability commitment. IR schema `1.0`. 17 CLI commands, bidirectional IR, golden-file regressions, backend authoring guide. The core is frozen — features ship as 1.x.
+- **v1.1.** LLM-assisted intent inference with content-addressed caching.
+- **v1.2.** Hybrid bridge, read-only (Hermes introspects OpenClaw tools).
+- **v1.3.** Hybrid bridge, read-write. LangGraph as a third target — first chance to test the IR's additive-only commitment under real pressure.
+- **v1.4.** VS Code extension surfacing the migration report as inline annotations.
+- **v2.0.** Reserved for "we got the IR shape wrong" — not for cosmetic or feature work. None planned.
 
 ## Contributing
 

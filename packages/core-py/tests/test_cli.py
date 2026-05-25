@@ -217,7 +217,7 @@ def test_cli_scan_emits_ir(sample_root: Path, tmp_path: Path) -> None:
     result = runner.invoke(app, ["scan", str(sample_root), "--emit-ir", str(ir_path)])
     assert result.exit_code == 0
     payload = json.loads(ir_path.read_text())
-    assert payload["praxis_ir_version"] == "0.1"
+    assert payload["praxis_ir_version"] == "1.0"
     assert len(payload["nodes"]) > 0
 
 
@@ -240,7 +240,7 @@ def test_cli_graph_json_format(sample_root: Path) -> None:
     result = runner.invoke(app, ["graph", str(sample_root), "--format", "json"])
     assert result.exit_code == 0
     payload = json.loads(result.output)
-    assert payload["praxis_ir_version"] == "0.1"
+    assert payload["praxis_ir_version"] == "1.0"
     assert payload["nodes"]
 
 

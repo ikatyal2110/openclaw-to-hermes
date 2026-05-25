@@ -1158,7 +1158,7 @@
       "side_effects": []
     }
   ],
-  "praxis_ir_version": "0.1",
+  "praxis_ir_version": "1.0",
   "project": {
     "analyzed_at": "NORMALIZED",
     "name": "example-agent-stack",
